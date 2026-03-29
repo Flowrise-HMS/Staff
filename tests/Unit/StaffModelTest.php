@@ -35,7 +35,7 @@ class StaffModelTest extends TestCase
     public function test_full_name_accessor(): void
     {
         $staff = Staff::factory()->create([
-            'title' => 'Dr.',
+            'title' => 'Dr',
             'first_name' => 'John',
             'middle_name' => 'Michael',
             'last_name' => 'Doe',

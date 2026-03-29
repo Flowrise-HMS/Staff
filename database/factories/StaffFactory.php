@@ -22,7 +22,7 @@ class StaffFactory extends Factory
         return [
             'user_id' => null,
             'staff_number' => 'STF-'.now()->format('Y').'-'.str_pad($this->faker->unique()->numberBetween(1, 99999), 5, '0', STR_PAD_LEFT),
-            'title' => $this->faker->randomElement(['Dr.', 'Mr.', 'Mrs.', 'Ms.', 'Prof.']),
+            'title' => $this->faker->randomElement(['Dr', 'Mr', 'Mrs', 'Ms', 'Prof']),
             'first_name' => $firstName,
             'middle_name' => $this->faker->optional()->firstName(),
             'last_name' => $lastName,
@@ -200,7 +200,7 @@ class StaffFactory extends Factory
     public function male(): static
     {
         return $this->state(fn (array $attributes) => [
-            'title' => 'Mr.',
+            'title' => 'Mr',
             'gender' => 'male',
         ]);
     }
@@ -208,7 +208,7 @@ class StaffFactory extends Factory
     public function female(): static
     {
         return $this->state(fn (array $attributes) => [
-            'title' => $this->faker->randomElement(['Mrs.', 'Ms.']),
+            'title' => $this->faker->randomElement(['Mrs', 'Ms']),
             'gender' => 'female',
         ]);
     }

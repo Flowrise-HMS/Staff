@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Staff\Filament\Clusters\Staff\Resources\Schemas;
+namespace Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;

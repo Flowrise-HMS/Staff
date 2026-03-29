@@ -1,10 +1,10 @@
 <?php
 
-namespace Modules\Staff\Filament\Clusters\Staff\Resources\Pages;
+namespace Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Pages;
 
-use Filament\Actions;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
-use Modules\Staff\Filament\Clusters\Staff\Resources\StaffResource;
+use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
 
 class ListStaff extends ListRecords
 {
@@ -13,7 +13,7 @@ class ListStaff extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            CreateAction::make(),
         ];
     }
 }

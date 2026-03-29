@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Staff\Filament\Clusters\Staff\Resources\Tables;
+namespace Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Tables;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -19,7 +19,6 @@ use Filament\Tables\Table;
 use Modules\Patient\Enums\Gender;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
-use Modules\Staff\Filament\Clusters\Staff\Resources\Pages\StaffProfile;
 use Ysfkaya\FilamentPhoneInput\Tables\PhoneColumn;
 
 class StaffTable
@@ -149,21 +148,22 @@ class StaffTable
                     ->requiresConfirmation()
                     ->icon('heroicon-o-pencil')
                     ->schema([
-                        Select::make('status')->options(EmploymentStatus::class)
+                        Select::make('status')
+                            ->default(fn ($record) => $record?->employment_status)
+                            ->options(EmploymentStatus::class)
                             ->searchable()
                             ->preload()
                             ->required(),
                     ])
                     ->action(function ($record, array $data) {
-                        $record?->update(['status' => $data['status']]);
+                        $record?->update(['employment_status' => $data['status']]);
                         Notification::make()->title('Staff Status has been updated')
                             ->success()
                             ->send();
                     }),
                 Action::make('view_profile')
                     ->label('View Profile')
-                    ->icon('heroicon-m-user-circle')
-                    ->url(fn ($record) => StaffProfile::getUrl(['record' => $record])),
+                    ->icon('heroicon-m-user-circle'),
             ]),
         ];
     }
