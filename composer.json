@@ -1,0 +1,44 @@
+{
+    "name": "flowrise-hms/staff",
+    "description": "Staff module for managing healthcare providers, roles, departments, shifts, and user assignments",
+    "type": "laravel-module",
+    "keywords": ["hms", "hospital", "staff", "employees", "roles", "healthcare"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Flowrise Digital",
+            "homepage": "https://github.com/Flowrise-HMS",
+            "email": "flowrisedigitals@gmail.com"
+        },
+        {
+            "name": "Mushe Abdul-Hakim",
+            "email": "musheabdulhakim99@gmail.com",
+            "homepage": "https://github.com/musheabdulhakim",
+            "role": "Lead Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "flowrise-hms/core": "dev-main"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {}
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Staff\\": "app/",
+            "Modules\\Staff\\Database\\Factories\\": "database/factories/",
+            "Modules\\Staff\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Staff\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
