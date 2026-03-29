@@ -20,13 +20,13 @@ class StaffDatabaseSeeder extends Seeder
             $departments = Department::factory()->count(5)->create();
         }
 
-        $departments = $departments->pluck('id')->toArray();
+        $departmentIds = $departments->pluck('id')->toArray();
 
-        $medicalStaff = [
+        $staffData = [
             [
-                'title' => 'Dr.',
+                'title' => 'Dr',
                 'first_name' => 'Kwame',
-                'surname' => 'Asante',
+                'last_name' => 'Asante',
                 'gender' => 'male',
                 'staff_type' => StaffType::FULL_TIME,
                 'departments' => ['Emergency', 'Internal Medicine'],
@@ -34,9 +34,9 @@ class StaffDatabaseSeeder extends Seeder
                 'specialty_code' => 'EM',
             ],
             [
-                'title' => 'Dr.',
+                'title' => 'Dr',
                 'first_name' => 'Akosua',
-                'surname' => 'Mensah',
+                'last_name' => 'Mensah',
                 'gender' => 'female',
                 'staff_type' => StaffType::FULL_TIME,
                 'departments' => ['Cardiology'],
@@ -44,9 +44,9 @@ class StaffDatabaseSeeder extends Seeder
                 'specialty_code' => 'CARD',
             ],
             [
-                'title' => 'Dr.',
+                'title' => 'Dr',
                 'first_name' => 'Yaw',
-                'surname' => 'Boakye',
+                'last_name' => 'Boakye',
                 'gender' => 'male',
                 'staff_type' => StaffType::CONSULTANT,
                 'departments' => ['Surgery'],
@@ -54,55 +54,52 @@ class StaffDatabaseSeeder extends Seeder
                 'specialty_code' => 'SURG',
             ],
             [
-                'title' => 'Dr.',
+                'title' => 'Dr',
                 'first_name' => 'Efua',
-                'surname' => 'Owusu',
+                'last_name' => 'Owusu',
                 'gender' => 'female',
                 'staff_type' => StaffType::RESIDENT,
                 'departments' => ['Pediatrics'],
                 'specialty' => 'Pediatrics',
                 'specialty_code' => 'PED',
             ],
-        ];
-
-        $nursingStaff = [
             [
-                'title' => 'Mrs.',
+                'title' => 'Mrs',
                 'first_name' => 'Adwoa',
-                'surname' => 'Bonsu',
+                'last_name' => 'Bonsu',
                 'gender' => 'female',
                 'staff_type' => StaffType::FULL_TIME,
                 'departments' => ['Nursing'],
             ],
             [
-                'title' => 'Mr.',
+                'title' => 'Mr',
                 'first_name' => 'Kofi',
-                'surname' => 'Agyeman',
+                'last_name' => 'Agyeman',
                 'gender' => 'male',
                 'staff_type' => StaffType::FULL_TIME,
                 'departments' => ['Nursing'],
             ],
         ];
 
-        $allStaff = array_merge($medicalStaff, $nursingStaff);
-
-        foreach ($allStaff as $index => $staffData) {
+        foreach ($staffData as $data) {
             $staff = Staff::factory()->create([
-                'title' => $staffData['title'],
-                'first_name' => $staffData['first_name'],
-                'surname' => $staffData['surname'],
-                'gender' => $staffData['gender'],
-                'staff_type' => $staffData['staff_type'],
+                'title' => $data['title'],
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'gender' => $data['gender'],
+                'staff_type' => $data['staff_type'],
                 'employment_status' => EmploymentStatus::ACTIVE,
                 'hire_date' => now()->subMonths(rand(6, 60)),
-                'phone' => fake()->phoneNumber(),
-                'email' => strtolower($staffData['first_name'].'.'.$staffData['surname']).'@hospital.com',
+                'contact' => [
+                    'email' => strtolower($data['first_name'].'.'.$data['last_name']).'@hospital.com',
+                    'phone' => fake()->phoneNumber(),
+                ],
             ]);
 
-            foreach ($staffData['departments'] as $deptIndex => $deptName) {
+            foreach ($data['departments'] as $deptIndex => $deptName) {
                 $department = Department::where('name', 'like', "%{$deptName}%")->first();
-                if (! $department && ! empty($departments)) {
-                    $department = Department::find($departments[array_rand($departments)]);
+                if (! $department && ! empty($departmentIds)) {
+                    $department = Department::find($departmentIds[array_rand($departmentIds)]);
                 }
 
                 if ($department) {
@@ -110,10 +107,10 @@ class StaffDatabaseSeeder extends Seeder
                 }
             }
 
-            if (isset($staffData['specialty'])) {
+            if (isset($data['specialty'])) {
                 $staff->specialties()->create([
-                    'specialty_name' => $staffData['specialty'],
-                    'specialty_code' => $staffData['specialty_code'] ?? null,
+                    'specialty_name' => $data['specialty'],
+                    'specialty_code' => $data['specialty_code'] ?? null,
                     'certification_date' => now()->subYears(rand(1, 5)),
                     'expiry_date' => now()->addYears(rand(2, 5)),
                     'issuing_body' => 'Ghana Medical and Dental Council',
@@ -121,15 +118,15 @@ class StaffDatabaseSeeder extends Seeder
                 ]);
             }
 
-            $this->createCredentialsForStaff($staff, $staffData);
+            $this->createCredentialsForStaff($staff);
         }
 
-        $this->command->info('Created '.count($allStaff).' staff members with departments, specialties, and credentials.');
+        $this->command->info('Created '.count($staffData).' staff members with departments, specialties, and credentials.');
     }
 
-    protected function createCredentialsForStaff(Staff $staff, array $staffData): void
+    protected function createCredentialsForStaff(Staff $staff): void
     {
-        $staffCredential = StaffCredential::factory()->verified()->create([
+        StaffCredential::factory()->verified()->create([
             'staff_id' => $staff->id,
             'credential_type' => CredentialType::MEDICAL_LICENSE,
             'credential_number' => 'GMC-'.fake()->numerify('######'),
@@ -137,7 +134,7 @@ class StaffDatabaseSeeder extends Seeder
             'expiry_date' => now()->addYears(rand(1, 5)),
         ]);
 
-        $blsCredential = StaffCredential::factory()->verified()->create([
+        StaffCredential::factory()->verified()->create([
             'staff_id' => $staff->id,
             'credential_type' => CredentialType::BLS_CERTIFICATION,
             'credential_number' => 'BLS-'.fake()->numerify('####'),

@@ -10,13 +10,16 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Modules\Patient\Enums\Gender;
+use Modules\Staff\Classes\Services\StaffAccountService;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
 use Ysfkaya\FilamentPhoneInput\Tables\PhoneColumn;
@@ -49,6 +52,15 @@ class StaffTable
                 ->label('Name')
                 ->searchable()
                 ->sortable(),
+
+            IconColumn::make('user_id')
+                ->label('')
+                ->boolean()
+                ->trueIcon('heroicon-s-check-circle')
+                ->trueColor('success')
+                ->falseIcon('heroicon-m-x-circle')
+                ->falseColor('gray')
+                ->tooltip(fn ($record) => $record->user_id ? 'Has user account' : 'No user account'),
 
             TextColumn::make('gender')
                 ->label('Gender')
@@ -120,6 +132,14 @@ class StaffTable
                 ->preload()
                 ->multiple(),
 
+            Filter::make('without_account')
+                ->label('Without User Account')
+                ->query(fn ($query) => $query->whereNull('user_id')),
+
+            Filter::make('with_account')
+                ->label('With User Account')
+                ->query(fn ($query) => $query->whereNotNull('user_id')),
+
             Filter::make('hire_date_range')
                 ->label('Hire Date Range')
                 ->schema([
@@ -144,10 +164,108 @@ class StaffTable
                     ->label('Edit'),
                 DeleteAction::make()
                     ->label('Delete'),
-                Action::make('update_status')
+                Action::make('createUserAccount')
+                    ->label('Create User Account')
+                    ->icon('heroicon-m-user-add')
+                    ->color('success')
+                    ->visible(fn ($record) => ! $record->user_id)
+                    ->form([
+                        TextInput::make('email')
+                            ->email()
+                            ->label('Email Address')
+                            ->helperText('Leave empty to auto-generate based on name')
+                            ->placeholder(fn ($record) => strtolower($record->first_name.'.'.$record->last_name).'@hospital.com'),
+
+                        Toggle::make('send_credentials')
+                            ->label('Send credentials via email')
+                            ->default(true),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $service = app(StaffAccountService::class);
+                        $user = $service->createUserAccount($record, [
+                            'email' => $data['email'] ?: null,
+                            'send_credentials' => $data['send_credentials'],
+                        ]);
+
+                        if ($user) {
+                            Notification::make()
+                                ->title('User account created')
+                                ->body('Login credentials have been '.($data['send_credentials'] ? 'sent to '.$user->email : 'created'))
+                                ->success()
+                                ->send();
+                        }
+                    }),
+
+                Action::make('manageUserAccount')
+                    ->label('Manage Account')
+                    ->icon('heroicon-m-cog-6-tooth')
+                    ->color('warning')
+                    ->visible(fn ($record) => (bool) $record->user_id)
+                    ->form([
+                        TextInput::make('email')
+                            ->email()
+                            ->label('Email Address')
+                            ->disabled(),
+
+                        Toggle::make('is_active')
+                            ->label('Account Active')
+                            ->default(fn ($record) => $record->user?->is_active),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $service = app(StaffAccountService::class);
+
+                        if (isset($data['is_active'])) {
+                            if ($data['is_active']) {
+                                $service->activateAccount($record);
+                            } else {
+                                $service->deactivateAccount($record);
+                            }
+                        }
+
+                        Notification::make()
+                            ->title('Account updated')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('resetPassword')
+                    ->label('Reset Password')
+                    ->icon('heroicon-m-key')
+                    ->color('warning')
                     ->requiresConfirmation()
+                    ->visible(fn ($record) => (bool) $record->user_id)
+                    ->action(function ($record) {
+                        $service = app(StaffAccountService::class);
+                        $service->resetPassword($record);
+
+                        Notification::make()
+                            ->title('Password reset')
+                            ->body('New credentials sent to '.$record->user->email)
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('resendCredentials')
+                    ->label('Resend Credentials')
+                    ->icon('heroicon-m-envelope')
+                    ->color('info')
+                    ->requiresConfirmation()
+                    ->visible(fn ($record) => (bool) $record->user_id)
+                    ->action(function ($record) {
+                        $service = app(StaffAccountService::class);
+                        $service->resendCredentials($record);
+
+                        Notification::make()
+                            ->title('Credentials resent')
+                            ->body('Login credentials sent to '.$record->user->email)
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('update_status')
+                    ->label('Update Status')
                     ->icon('heroicon-o-pencil')
-                    ->schema([
+                    ->form([
                         Select::make('status')
                             ->default(fn ($record) => $record?->employment_status)
                             ->options(EmploymentStatus::class)
@@ -157,13 +275,11 @@ class StaffTable
                     ])
                     ->action(function ($record, array $data) {
                         $record?->update(['employment_status' => $data['status']]);
-                        Notification::make()->title('Staff Status has been updated')
+                        Notification::make()
+                            ->title('Staff status updated')
                             ->success()
                             ->send();
                     }),
-                Action::make('view_profile')
-                    ->label('View Profile')
-                    ->icon('heroicon-m-user-circle'),
             ]),
         ];
     }

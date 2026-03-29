@@ -2,45 +2,68 @@
 
 namespace Modules\Staff\Providers;
 
-use Illuminate\Console\Scheduling\Schedule;
-use Nwidart\Modules\Support\ModuleServiceProvider;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Illuminate\Support\Facades\Gate;
+use Modules\Staff\Classes\Services\StaffAccountService;
+use Modules\Staff\Classes\Services\StaffAssignmentService;
+use Modules\Staff\Classes\Services\StaffCredentialService;
+use Modules\Staff\Classes\Services\StaffSearchService;
+use Modules\Staff\Classes\Services\StaffService;
+use Modules\Staff\Models\Staff;
+use Modules\Staff\Policies\StaffPolicy;
 
-class StaffServiceProvider extends ModuleServiceProvider
+class StaffServiceProvider extends ServiceProvider
 {
-    /**
-     * The name of the module.
-     */
     protected string $name = 'Staff';
 
-    /**
-     * The lowercase version of the module name.
-     */
     protected string $nameLower = 'staff';
 
-    /**
-     * Command classes to register.
-     *
-     * @var string[]
-     */
-    // protected array $commands = [];
-
-    /**
-     * Provider classes to register.
-     *
-     * @var string[]
-     */
     protected array $providers = [
         EventServiceProvider::class,
         RouteServiceProvider::class,
     ];
 
-    /**
-     * Define module schedules.
-     *
-     * @param  $schedule
-     */
-    // protected function configureSchedules(Schedule $schedule): void
-    // {
-    //     $schedule->command('inspire')->hourly();
-    // }
+    public function boot(): void
+    {
+        $this->registerPolicies();
+        $this->registerServices();
+    }
+
+    public function register(): void
+    {
+        parent::register();
+    }
+
+    protected function registerServices(): void
+    {
+        $this->app->singleton(
+            StaffService::class,
+            fn () => new StaffService
+        );
+
+        $this->app->singleton(
+            StaffCredentialService::class,
+            fn () => new StaffCredentialService
+        );
+
+        $this->app->singleton(
+            StaffAssignmentService::class,
+            fn () => new StaffAssignmentService
+        );
+
+        $this->app->singleton(
+            StaffSearchService::class,
+            fn () => new StaffSearchService
+        );
+
+        $this->app->singleton(
+            StaffAccountService::class,
+            fn () => new StaffAccountService
+        );
+    }
+
+    public function registerPolicies(): void
+    {
+        Gate::policy(Staff::class, StaffPolicy::class);
+    }
 }
