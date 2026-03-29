@@ -2,6 +2,7 @@
 
 namespace Modules\Staff\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,6 @@ use Illuminate\Support\Collection;
 use Modules\Core\Enums\Title;
 use Modules\Core\Models\BaseModel;
 use Modules\Core\Models\Branch;
-use Modules\Core\Models\CoreUser;
 use Modules\Core\Models\Department;
 use Modules\Core\Traits\HasAddress;
 use Modules\Core\Traits\HasContact;
@@ -93,7 +93,7 @@ class Staff extends BaseModel
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(CoreUser::class, 'user_id');
+        return $this->belongsTo(config('auth.providers.users.model', User::class), 'user_id');
     }
 
     public function departments(): BelongsToMany

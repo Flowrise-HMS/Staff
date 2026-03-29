@@ -20,12 +20,14 @@ class StaffAccountService
             return $staff->user;
         }
 
+        $username = $data['username'] ?? $this->generateUsername($staff);
         $email = $data['email'] ?? $this->generateEmail($staff);
         $password = $data['password'] ?? $this->generatePassword();
 
         $user = User::create([
             'name' => $staff->full_name,
             'email' => $email,
+            'username' => $username,
             'password' => Hash::make($password),
             'phone' => $staff->getPhone(),
             'is_active' => true,

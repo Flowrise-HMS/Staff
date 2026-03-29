@@ -10,6 +10,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -166,10 +167,12 @@ class StaffTable
                     ->label('Delete'),
                 Action::make('createUserAccount')
                     ->label('Create User Account')
-                    ->icon('heroicon-m-user-add')
+                    ->icon('heroicon-m-user-plus')
                     ->color('success')
                     ->visible(fn ($record) => ! $record->user_id)
-                    ->form([
+                    ->schema([
+                        TextInput::make('username')
+                            ->unique('users', 'username', ignoreRecord: true),
                         TextInput::make('email')
                             ->email()
                             ->label('Email Address')
@@ -183,6 +186,7 @@ class StaffTable
                     ->action(function ($record, array $data) {
                         $service = app(StaffAccountService::class);
                         $user = $service->createUserAccount($record, [
+                            'username' => $data['username'] ?: null,
                             'email' => $data['email'] ?: null,
                             'send_credentials' => $data['send_credentials'],
                         ]);
@@ -201,7 +205,7 @@ class StaffTable
                     ->icon('heroicon-m-cog-6-tooth')
                     ->color('warning')
                     ->visible(fn ($record) => (bool) $record->user_id)
-                    ->form([
+                    ->schema([
                         TextInput::make('email')
                             ->email()
                             ->label('Email Address')
@@ -265,7 +269,7 @@ class StaffTable
                 Action::make('update_status')
                     ->label('Update Status')
                     ->icon('heroicon-o-pencil')
-                    ->form([
+                    ->schema([
                         Select::make('status')
                             ->default(fn ($record) => $record?->employment_status)
                             ->options(EmploymentStatus::class)
