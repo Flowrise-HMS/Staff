@@ -2,12 +2,12 @@
 
 namespace Modules\Staff\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Modules\Core\Models\CoreUser;
 use Modules\Staff\Database\Factories\StaffCredentialFactory;
 use Modules\Staff\Enums\CredentialStatus;
 use Modules\Staff\Enums\CredentialType;
@@ -56,7 +56,7 @@ class StaffCredential extends Model
 
     public function verifiedBy(): BelongsTo
     {
-        return $this->belongsTo(CoreUser::class, 'verified_by');
+        return $this->belongsTo(config('auth.providers.users.model', User::class), 'verified_by');
     }
 
     public function scopePending($query)

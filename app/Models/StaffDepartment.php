@@ -12,8 +12,7 @@ use Modules\Staff\Database\Factories\StaffDepartmentFactory;
 
 class StaffDepartment extends Model
 {
-/** @use HasFactory<StaffDepartmentFactory> */
-
+    /** @use HasFactory<StaffDepartmentFactory> */
     use HasFactory, HasUuids;
 
     protected $fillable = [
