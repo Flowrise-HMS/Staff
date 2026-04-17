@@ -145,9 +145,9 @@ class Staff extends BaseModel
     public function branches()
     {
         return $this->belongsToMany(Branch::class, 'staff_departments')
-        ->using(StaffDepartment::class)
-        ->withPivot(['is_primary', 'start_date', 'end_date', 'designation'])
-        ->withTimestamps();
+            ->using(StaffDepartment::class)
+            ->withPivot(['is_primary', 'start_date', 'end_date', 'designation'])
+            ->withTimestamps();
     }
 
     public function scopeActive($query)
