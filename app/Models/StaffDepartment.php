@@ -5,15 +5,17 @@ namespace Modules\Staff\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Modules\Core\Models\Department;
 use Modules\Staff\Database\Factories\StaffDepartmentFactory;
 
-class StaffDepartment extends Model
+class StaffDepartment extends Pivot
 {
     /** @use HasFactory<StaffDepartmentFactory> */
     use HasFactory, HasUuids;
+
+    public $incrementing = false;
 
     protected $fillable = [
         'staff_id',

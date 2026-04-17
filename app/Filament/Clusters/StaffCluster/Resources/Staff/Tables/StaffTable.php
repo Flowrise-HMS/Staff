@@ -207,11 +207,11 @@ class StaffTable
                     ->visible(fn ($record) => (bool) $record->user_id)
                     ->schema([
                         TextInput::make('username')
-                            ->default(fn($record) => $record?->user?->username ?? 'N/A')
+                            ->default(fn ($record) => $record?->user?->username ?? 'N/A')
                             ->disabled(),
                         TextInput::make('email')
                             ->email()
-                            ->default(fn($record) => $record?->user?->email)
+                            ->default(fn ($record) => $record?->user?->email)
                             ->label('Email Address')
                             ->disabled(),
 

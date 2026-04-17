@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Modules\Core\Enums\Title;
 use Modules\Core\Models\BaseModel;
+use Modules\Core\Models\Branch;
 use Modules\Core\Models\Department;
 use Modules\Core\Traits\HasAddress;
 use Modules\Core\Traits\HasContact;
@@ -143,10 +144,10 @@ class Staff extends BaseModel
 
     public function branches()
     {
-        return $this->hasManyDeep();
-        // return $this->belongsToManyThrough(Branch::class, StaffDepartment::class);
-        // return $this->belongsToMany(Branch::class, 'staff_departments')
-        //     ->through(StaffDepartment::class);
+        return $this->belongsToMany(Branch::class, 'staff_departments')
+        ->using(StaffDepartment::class)
+        ->withPivot(['is_primary', 'start_date', 'end_date', 'designation'])
+        ->withTimestamps();
     }
 
     public function scopeActive($query)
