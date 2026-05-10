@@ -2,6 +2,8 @@
 
 namespace Modules\Staff\Tests\Unit;
 
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasDescription;
 use Filament\Support\Contracts\HasLabel;
 use Modules\Staff\Enums\CredentialStatus;
 use Modules\Staff\Enums\CredentialType;
@@ -150,8 +152,17 @@ class EnumsTest extends TestCase
     public function test_all_enums_implement_interface(): void
     {
         $this->assertInstanceOf(HasLabel::class, StaffType::FULL_TIME);
+        $this->assertInstanceOf(HasColor::class, StaffType::FULL_TIME);
+        $this->assertInstanceOf(HasDescription::class, StaffType::FULL_TIME);
         $this->assertInstanceOf(HasLabel::class, EmploymentStatus::ACTIVE);
+        $this->assertInstanceOf(HasColor::class, EmploymentStatus::ACTIVE);
+        $this->assertInstanceOf(HasDescription::class, EmploymentStatus::ACTIVE);
         $this->assertInstanceOf(HasLabel::class, CredentialStatus::VERIFIED);
+        $this->assertInstanceOf(HasColor::class, CredentialStatus::VERIFIED);
+        $this->assertInstanceOf(HasDescription::class, CredentialStatus::VERIFIED);
+        $this->assertInstanceOf(HasLabel::class, CredentialType::MEDICAL_LICENSE);
+        $this->assertInstanceOf(HasColor::class, CredentialType::MEDICAL_LICENSE);
+        $this->assertInstanceOf(HasDescription::class, CredentialType::MEDICAL_LICENSE);
     }
 
     public function test_enums_have_values_method(): void

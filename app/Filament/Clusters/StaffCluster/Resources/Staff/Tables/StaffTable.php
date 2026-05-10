@@ -20,6 +20,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Modules\Patient\Enums\Gender;
 use Modules\Staff\Classes\Services\StaffAccountService;
 use Modules\Staff\Enums\EmploymentStatus;
@@ -179,7 +180,7 @@ class StaffTable
                     ->visible(fn ($record) => ! $record->user_id)
                     ->schema([
                         TextInput::make('username')
-                            ->unique('users', 'username', ignoreRecord: true),
+                            ->nullable(),
                         TextInput::make('email')
                             ->email()
                             ->label('Email Address')
@@ -191,6 +192,12 @@ class StaffTable
                             ->default(true),
                     ])
                     ->action(function ($record, array $data) {
+                        if(isset($data['username']) && !empty($data['username'])){
+                            $user = \App\Models\User::where('username', $data['username'])->exists();
+                            if($user){
+                                throw ValidationException::withMessages(['username' =>'Username is already taken']);
+                            }
+                        }
                         $service = app(StaffAccountService::class);
                         $user = $service->createUserAccount($record, [
                             'username' => $data['username'] ?: null,

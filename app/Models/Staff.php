@@ -28,6 +28,7 @@ class Staff extends BaseModel
     use HasAddress, HasContact, HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
+        'branch_id',
         'user_id',
         'staff_number',
         'title',
@@ -140,14 +141,6 @@ class Staff extends BaseModel
         return $this->credentials()
             ->where('expiry_date', '<=', now()->addDays($days))
             ->where('expiry_date', '>=', now());
-    }
-
-    public function branches()
-    {
-        return $this->belongsToMany(Branch::class, 'staff_departments')
-            ->using(StaffDepartment::class)
-            ->withPivot(['is_primary', 'start_date', 'end_date', 'designation'])
-            ->withTimestamps();
     }
 
     public function scopeActive($query)

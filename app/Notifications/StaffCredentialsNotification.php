@@ -28,6 +28,7 @@ class StaffCredentialsNotification extends Notification implements ShouldQueue
             ->line('Your account has been created in the '.config('app.name').' Hospital Management System.')
             ->line('**Your login credentials:**')
             ->line('**Email:** '.$notifiable->email)
+            ->line('**Username:** '.$notifiable->username)
             ->line('**Password:** '.$this->password)
             ->line('')
             ->line('Please change your password after your first login.')

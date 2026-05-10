@@ -122,6 +122,10 @@ class StaffDatabaseSeeder extends Seeder
         }
 
         $this->command->info('Created '.count($staffData).' staff members with departments, specialties, and credentials.');
+
+        $this->call([
+            StaffCustomPermissionSeeder::class,
+        ]);
     }
 
     protected function createCredentialsForStaff(Staff $staff): void

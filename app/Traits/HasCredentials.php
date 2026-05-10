@@ -2,7 +2,7 @@
 
 namespace Modules\Staff\Traits;
 
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Modules\Staff\Enums\CredentialStatus;
 use Modules\Staff\Enums\CredentialType;
@@ -10,9 +10,9 @@ use Modules\Staff\Models\StaffCredential;
 
 trait HasCredentials
 {
-    public function credentials(): MorphMany
+    public function credentials(): HasMany
     {
-        return $this->morphMany(StaffCredential::class, 'staff', 'staff_id');
+        return $this->hasMany(StaffCredential::class, 'staff_id');
     }
 
     public function hasCredentials(): bool

@@ -20,8 +20,8 @@ class StaffAccountService
             return $staff->user;
         }
 
-        $username = $data['username'] ?? $this->generateUsername($staff);
-        $email = $data['email'] ?? $this->generateEmail($staff);
+        $username = isset($data['username']) && !empty($data['username']) ? $data['username'] : $this->generateUsername($staff);
+        $email = isset($data['email']) && !empty($data['email']) ? $data['email']: $this->generateEmail($staff);
         $password = $data['password'] ?? $this->generatePassword();
 
         $user = User::create([

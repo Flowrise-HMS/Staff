@@ -2,7 +2,7 @@
 
 namespace Modules\Staff\Traits;
 
-use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use Modules\Core\Models\Department;
 use Modules\Staff\Enums\CredentialType;
@@ -13,9 +13,9 @@ use Modules\Staff\Models\StaffSpecialty;
 
 trait HasStaffProfile
 {
-    public function staffProfile(): MorphOne
+    public function staffProfile(): HasOne
     {
-        return $this->morphOne(Staff::class, 'user', 'user_id');
+        return $this->hasOne(Staff::class, 'user_id');
     }
 
     public function staff(): ?Staff
