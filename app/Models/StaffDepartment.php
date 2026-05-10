@@ -15,6 +15,8 @@ class StaffDepartment extends Pivot
     /** @use HasFactory<StaffDepartmentFactory> */
     use HasFactory, HasUuids;
 
+    protected $table = 'staff_departments';
+
     public $incrementing = false;
 
     protected $fillable = [

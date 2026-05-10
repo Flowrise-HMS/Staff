@@ -3,10 +3,11 @@
 namespace Modules\Staff\Enums;
 
 use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasDescription;
 use Filament\Support\Contracts\HasLabel;
 use Illuminate\Contracts\Support\Htmlable;
 
-enum CredentialType: string implements HasColor, HasLabel
+enum CredentialType: string implements HasColor, HasDescription, HasLabel
 {
     case MEDICAL_LICENSE = 'medical_license';
     case NURSING_LICENSE = 'nursing_license';
@@ -89,6 +90,36 @@ enum CredentialType: string implements HasColor, HasLabel
 
             self::HEALTH_SAFETY_CERTIFICATION,
             self::DATA_PROTECTION_CERTIFICATION => 'gray',
+        };
+    }
+
+    public function getDescription(): string|Htmlable|null
+    {
+        return match ($this) {
+            self::MEDICAL_LICENSE => 'Government-issued license to practice medicine.',
+            self::NURSING_LICENSE => 'Registered or enrolled nursing license.',
+            self::PHARMACY_LICENSE => 'Pharmacist professional license.',
+            self::SPECIALTY_CERTIFICATION => 'Board or specialty college certification.',
+            self::BLS_CERTIFICATION => 'Basic life support provider card.',
+            self::ACLS_CERTIFICATION => 'Advanced cardiac life support certification.',
+            self::PALS_CERTIFICATION => 'Pediatric advanced life support certification.',
+            self::ADVANCED_RADIOLOGY_CERTIFICATION => 'Advanced practice radiology credential.',
+            self::LABORATORY_ACCREDITATION => 'Laboratory quality or accreditation document.',
+            self::PHLEBOTOMY_CERTIFICATION => 'Venipuncture or phlebotomy competency.',
+            self::DENTAL_LICENSE => 'Dental practice license.',
+            self::PHARMACY_TECHNICIAN_LICENSE => 'Pharmacy technician registration.',
+            self::NPI_NUMBER => 'National provider identifier registration.',
+            self::DEA_REGISTRATION => 'Drug Enforcement Administration controlled substance registration.',
+            self::BOARD_CERTIFICATION => 'Medical board certification in a specialty.',
+            self::RESIDENCY_CERTIFICATE => 'Postgraduate residency training certificate.',
+            self::BLS_CPR_CERTIFICATION => 'Combined BLS and CPR certification.',
+            self::TRAUMA_LIFE_SUPPORT => 'Trauma-focused resuscitation course.',
+            self::PEDIATRIC_LIFE_SUPPORT => 'Pediatric resuscitation certification.',
+            self::NEONATAL_LIFE_SUPPORT => 'Neonatal resuscitation certification.',
+            self::OCCUPATIONAL_LICENSE => 'Licensed allied health or technical occupation.',
+            self::PROFESSIONAL_INDEMNITY_INSURANCE => 'Malpractice or indemnity coverage proof.',
+            self::HEALTH_SAFETY_CERTIFICATION => 'Occupational health and safety training.',
+            self::DATA_PROTECTION_CERTIFICATION => 'Privacy or data protection training record.',
         };
     }
 

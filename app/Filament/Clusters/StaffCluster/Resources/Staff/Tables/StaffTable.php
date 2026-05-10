@@ -19,6 +19,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Modules\Patient\Enums\Gender;
 use Modules\Staff\Classes\Services\StaffAccountService;
 use Modules\Staff\Enums\EmploymentStatus;
@@ -161,6 +162,12 @@ class StaffTable
             ActionGroup::make([
                 ViewAction::make()
                     ->label('View'),
+                Action::make('print_staff_id')
+                    ->label(__('Staff ID Card'))
+                    ->icon('heroicon-o-identification')
+                    ->url(fn ($record) => route('staff.id-card', $record))
+                    ->openUrlInNewTab()
+                    ->visible(fn () => Auth::user()?->can('print_staff_id')),
                 EditAction::make()
                     ->label('Edit'),
                 DeleteAction::make()
