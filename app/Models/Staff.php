@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Modules\Core\Enums\Title;
 use Modules\Core\Models\BaseModel;
-use Modules\Core\Models\Branch;
 use Modules\Core\Models\Department;
 use Modules\Core\Traits\HasAddress;
 use Modules\Core\Traits\HasContact;

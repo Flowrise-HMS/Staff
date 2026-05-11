@@ -2,6 +2,7 @@
 
 namespace Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Tables;
 
+use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -192,10 +193,10 @@ class StaffTable
                             ->default(true),
                     ])
                     ->action(function ($record, array $data) {
-                        if(isset($data['username']) && !empty($data['username'])){
-                            $user = \App\Models\User::where('username', $data['username'])->exists();
-                            if($user){
-                                throw ValidationException::withMessages(['username' =>'Username is already taken']);
+                        if (isset($data['username']) && ! empty($data['username'])) {
+                            $user = User::where('username', $data['username'])->exists();
+                            if ($user) {
+                                throw ValidationException::withMessages(['username' => 'Username is already taken']);
                             }
                         }
                         $service = app(StaffAccountService::class);
