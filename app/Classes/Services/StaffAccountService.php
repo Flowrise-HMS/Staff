@@ -14,6 +14,12 @@ class StaffAccountService
         protected ?string $defaultRole = null
     ) {}
 
+    public function setRole(string $role)
+    {
+        $this->defaultRole = $role;
+        return $this;
+    }
+
     public function createUserAccount(Staff $staff, array $data = []): ?User
     {
         if ($staff->user_id) {

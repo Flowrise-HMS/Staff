@@ -21,7 +21,9 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Hash;
+use Livewire\Attributes\Rule;
+use Modules\Core\Enums\UserRole;
 use Modules\Patient\Enums\Gender;
 use Modules\Staff\Classes\Services\StaffAccountService;
 use Modules\Staff\Enums\EmploymentStatus;
@@ -181,32 +183,38 @@ class StaffTable
                     ->visible(fn ($record) => ! $record->user_id)
                     ->schema([
                         TextInput::make('username')
-                            ->nullable(),
+                            ->default(fn($record) => strtolower($record->first_name.'.'.$record->last_name))
+                            ->required()
+                            ->unique(User::class, 'username'),
                         TextInput::make('email')
                             ->email()
                             ->label('Email Address')
                             ->helperText('Leave empty to auto-generate based on name')
+                            ->default(fn ($record) => strtolower($record->first_name.'.'.$record->last_name).'@hospital.com')
                             ->placeholder(fn ($record) => strtolower($record->first_name.'.'.$record->last_name).'@hospital.com'),
 
                         Toggle::make('send_credentials')
                             ->label('Send credentials via email')
                             ->default(true),
+
+                        Select::make('roles')
+                            ->label('Role(s)')
+                            ->options(UserRole::class)
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->required(),
                     ])
                     ->action(function ($record, array $data) {
-                        if (isset($data['username']) && ! empty($data['username'])) {
-                            $user = User::where('username', $data['username'])->exists();
-                            if ($user) {
-                                throw ValidationException::withMessages(['username' => 'Username is already taken']);
-                            }
-                        }
                         $service = app(StaffAccountService::class);
-                        $user = $service->createUserAccount($record, [
-                            'username' => $data['username'] ?: null,
-                            'email' => $data['email'] ?: null,
-                            'send_credentials' => $data['send_credentials'],
-                        ]);
+                        if (! empty($data['roles'])) {
+                            $service->setRole($data['roles']);
+                        }
+                        $user = $service->createUserAccount($record, $data);
 
                         if ($user) {
+
+
                             Notification::make()
                                 ->title('User account created')
                                 ->body('Login credentials have been '.($data['send_credentials'] ? 'sent to '.$user->email : 'created'))
@@ -222,13 +230,31 @@ class StaffTable
                     ->visible(fn ($record) => (bool) $record->user_id)
                     ->schema([
                         TextInput::make('username')
-                            ->default(fn ($record) => $record?->user?->username ?? 'N/A')
-                            ->disabled(),
+                            ->default(fn ($record) => $record?->user?->username ?? $record?->staff_number)
+                            ->required()
+                            ->unique(User::class, 'username', fn ($record) => $record?->user),
                         TextInput::make('email')
                             ->email()
-                            ->default(fn ($record) => $record?->user?->email)
                             ->label('Email Address')
-                            ->disabled(),
+                            ->default(fn ($record) => $record?->user?->email ?? '')
+                            ->required()
+                            ->unique(User::class, 'email', fn ($record) => $record?->user),
+
+                        Select::make('roles')
+                            ->label('Role(s)')
+                            ->options(UserRole::class)
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->default(fn ($record) => $record->user?->roles?->pluck('name')->toArray() ?? []),
+
+                        TextInput::make('password')
+                            ->label('New Password')
+                            ->password()
+                            ->revealable()
+                            ->nullable()
+                            ->helperText('Leave empty to keep current password'),
 
                         Toggle::make('is_active')
                             ->label('Account Active')
@@ -237,11 +263,26 @@ class StaffTable
                     ->action(function ($record, array $data) {
                         $service = app(StaffAccountService::class);
 
-                        if (isset($data['is_active'])) {
-                            if ($data['is_active']) {
-                                $service->activateAccount($record);
-                            } else {
-                                $service->deactivateAccount($record);
+                        if ($record->user) {
+                            $user = $record->user;
+
+                            $user->update([
+                                'username' => $data['username'],
+                                'email' => $data['email'],
+                            ]);
+
+                            if (! empty($data['password'])) {
+                                $user->update(['password' => Hash::make($data['password'])]);
+                            }
+
+                            if (! empty($data['roles'])) {
+                                $user->syncRoles($data['roles']);
+                            }
+
+                            if (isset($data['is_active'])) {
+                                $data['is_active']
+                                    ? $service->activateAccount($record)
+                                    : $service->deactivateAccount($record);
                             }
                         }
 
