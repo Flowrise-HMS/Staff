@@ -18,12 +18,6 @@ class StaffCustomPermissionSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        foreach (array_keys($this->matrix) as $name) {
-            foreach (['web', 'api'] as $guard) {
-                Permission::firstOrCreate(['name' => $name, 'guard_name' => $guard]);
-            }
-        }
-
         foreach ($this->matrix as $name => $roles) {
             $perm = Permission::query()->where(['name' => $name, 'guard_name' => 'web'])->first();
             if (! $perm) {
