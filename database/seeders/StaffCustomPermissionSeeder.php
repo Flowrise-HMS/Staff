@@ -11,7 +11,7 @@ class StaffCustomPermissionSeeder extends Seeder
 {
     /** @var array<string, string[]> permission name => web-guard roles */
     protected array $matrix = [
-        'print_staff_id' => ['super_admin', 'operations_manager', 'department_head', 'it_admin'],
+        'print_staff_id' => ['super_admin'],
     ];
 
     public function run(): void

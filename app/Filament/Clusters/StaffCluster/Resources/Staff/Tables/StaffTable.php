@@ -2,7 +2,6 @@
 
 namespace Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Tables;
 
-use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -22,7 +21,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Livewire\Attributes\Rule;
 use Modules\Core\Enums\UserRole;
 use Modules\Patient\Enums\Gender;
 use Modules\Staff\Classes\Services\StaffAccountService;
@@ -56,7 +54,7 @@ class StaffTable
 
             TextColumn::make('full_name')
                 ->label('Name')
-                ->searchable()
+                ->searchable(false)
                 ->sortable(),
 
             IconColumn::make('user_id')
@@ -93,6 +91,7 @@ class StaffTable
 
             TextColumn::make('contact.email')
                 ->label('Email')
+                ->copyable()
                 ->getStateUsing(fn ($record) => $record->getEmail())
                 ->searchable()
                 ->sortable()
@@ -183,9 +182,9 @@ class StaffTable
                     ->visible(fn ($record) => ! $record->user_id)
                     ->schema([
                         TextInput::make('username')
-                            ->default(fn($record) => strtolower($record->first_name.'.'.$record->last_name))
+                            ->default(fn ($record) => strtolower($record->first_name.'.'.$record->last_name))
                             ->required()
-                            ->unique(User::class, 'username'),
+                            ->unique('users', 'username', ignoreRecord: false),
                         TextInput::make('email')
                             ->email()
                             ->label('Email Address')
@@ -214,7 +213,6 @@ class StaffTable
 
                         if ($user) {
 
-
                             Notification::make()
                                 ->title('User account created')
                                 ->body('Login credentials have been '.($data['send_credentials'] ? 'sent to '.$user->email : 'created'))
@@ -232,13 +230,13 @@ class StaffTable
                         TextInput::make('username')
                             ->default(fn ($record) => $record?->user?->username ?? $record?->staff_number)
                             ->required()
-                            ->unique(User::class, 'username', fn ($record) => $record?->user),
+                            ->unique('users', 'username', fn ($record) => $record?->user, ignoreRecord: false),
                         TextInput::make('email')
                             ->email()
                             ->label('Email Address')
                             ->default(fn ($record) => $record?->user?->email ?? '')
                             ->required()
-                            ->unique(User::class, 'email', fn ($record) => $record?->user),
+                            ->unique('users', 'email', fn ($record) => $record?->user, ignoreRecord: false),
 
                         Select::make('roles')
                             ->label('Role(s)')

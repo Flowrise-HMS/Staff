@@ -11,12 +11,12 @@ use Modules\Staff\Notifications\StaffCredentialsNotification;
 class StaffAccountService
 {
     public function __construct(
-        protected ?string $defaultRole = null
+        protected string|array|null $defaultRole = null
     ) {}
 
-    public function setRole(string $role)
+    public function setRole(array|string|null $roles)
     {
-        $this->defaultRole = $role;
+        $this->defaultRole = $roles;
         return $this;
     }
 
@@ -42,7 +42,7 @@ class StaffAccountService
         $staff->update(['user_id' => $user->id]);
 
         if ($this->defaultRole) {
-            $user->assignRole($this->defaultRole);
+            $user->syncRoles($this->defaultRole);
         }
 
         if ($data['send_credentials'] ?? false) {
