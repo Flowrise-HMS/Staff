@@ -203,6 +203,12 @@ class StaffTable
                             ->searchable()
                             ->preload()
                             ->required(),
+                        TextInput::make('password')
+                            ->label('New Password')
+                            ->password()
+                            ->revealable()
+                            ->nullable()
+                            ->helperText('Leave empty to auto generate'),
                     ])
                     ->action(function ($record, array $data) {
                         $service = app(StaffAccountService::class);
