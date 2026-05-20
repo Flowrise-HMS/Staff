@@ -12,7 +12,10 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Context;
+use Modules\Core\Classes\Services\BranchService;
 use Modules\Core\Enums\Title;
+use Modules\Core\Models\Branch;
 use Modules\Patient\Enums\Gender;
 use Modules\Patient\Enums\RelationshipType;
 use Modules\Staff\Enums\EmploymentStatus;
@@ -54,10 +57,16 @@ class StaffForm
             ->icon('heroicon-o-user')
             ->columns(2)
             ->schema([
+                Select::make('branch_id')
+                    ->relationship('branch', 'name')
+                    ->preload()
+                    ->searchable()
+                    ->default(app(BranchService::class)->getDefaultBranchId())
+                    ->label('Branch'),
                 Select::make('title')
                     ->options(Title::class)
-                    ->searchable()
-                    ->columnSpanFull(),
+                    ->searchable(),
+
                 Group::make([
                     TextInput::make('first_name')
                         ->required()
