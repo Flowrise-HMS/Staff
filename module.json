@@ -9,6 +9,7 @@
     ],
     "files": [],
     "requires": [
-        "Modules\\Core"
+        "Modules\\Core",
+        "Modules\\Patient"
     ]
 }

@@ -19,7 +19,8 @@
     ],
     "require": {
         "php": "^8.4",
-        "flowrise-hms/core": "dev-main"
+        "flowrise-hms/core": "dev-main",
+        "flowrise-hms/patient": "dev-main"
     },
     "extra": {
         "laravel": {

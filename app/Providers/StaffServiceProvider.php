@@ -2,7 +2,6 @@
 
 namespace Modules\Staff\Providers;
 
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Modules\Staff\Classes\Services\StaffAccountService;
@@ -12,21 +11,24 @@ use Modules\Staff\Classes\Services\StaffSearchService;
 use Modules\Staff\Classes\Services\StaffService;
 use Modules\Staff\Models\Staff;
 use Modules\Staff\Policies\StaffPolicy;
+use Nwidart\Modules\Support\ModuleServiceProvider;
 
-class StaffServiceProvider extends ServiceProvider
+class StaffServiceProvider extends ModuleServiceProvider
 {
     protected string $name = 'Staff';
 
     protected string $nameLower = 'staff';
 
     protected array $providers = [
-        //
+        RouteServiceProvider::class,
+        EventServiceProvider::class,
     ];
 
     public function boot(): void
     {
-        $this->registerPolicies();
+        parent::boot();
         $this->registerViews();
+        Gate::policy(Staff::class, StaffPolicy::class);
         $this->registerServices();
     }
 
@@ -52,13 +54,6 @@ class StaffServiceProvider extends ServiceProvider
         }
 
         return $paths;
-    }
-
-    public function register(): void
-    {
-        parent::register();
-        $this->app->register(RouteServiceProvider::class);
-        $this->app->register(EventServiceProvider::class);
     }
 
     protected function registerServices(): void
@@ -87,10 +82,5 @@ class StaffServiceProvider extends ServiceProvider
             StaffAccountService::class,
             fn () => new StaffAccountService
         );
-    }
-
-    public function registerPolicies(): void
-    {
-        Gate::policy(Staff::class, StaffPolicy::class);
     }
 }
