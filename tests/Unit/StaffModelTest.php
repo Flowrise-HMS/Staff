@@ -2,7 +2,7 @@
 
 namespace Modules\Staff\Tests\Unit;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\Core\Models\Department;
 use Modules\Staff\Enums\CredentialType;
 use Modules\Staff\Enums\EmploymentStatus;
@@ -12,7 +12,13 @@ use Tests\TestCase;
 
 class StaffModelTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->migrateModules(['Core', 'Staff']);
+    }
 
     public function test_can_create_staff(): void
     {

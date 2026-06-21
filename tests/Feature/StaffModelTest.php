@@ -2,7 +2,7 @@
 
 namespace Modules\Staff\Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\Core\Models\Branch;
 use Modules\Staff\Models\Staff;
 use Modules\Staff\Models\StaffSpecialty;
@@ -10,13 +10,12 @@ use Tests\TestCase;
 
 class StaffModelTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->artisan('module:migrate', ['module' => 'Core', '--force' => true]);
-        $this->artisan('module:migrate', ['module' => 'Staff', '--force' => true]);
+        $this->migrateModules(['Core', 'Staff']);
     }
 
     public function test_staff_factory_creates_staff(): void

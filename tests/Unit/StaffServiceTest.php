@@ -3,7 +3,7 @@
 namespace Modules\Staff\Tests\Unit;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\Staff\Classes\Services\StaffService;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
@@ -12,13 +12,14 @@ use Tests\TestCase;
 
 class StaffServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected StaffService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->migrateModules(['Core', 'Staff']);
         $this->service = new StaffService;
     }
 

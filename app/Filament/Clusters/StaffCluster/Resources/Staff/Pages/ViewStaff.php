@@ -17,6 +17,10 @@ class ViewStaff extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('activities')
+                ->label('Activities')
+                ->icon('heroicon-o-bell-alert')
+                ->url(fn () => StaffResource::getUrl('activities', ['record' => $this->getRecord()])),
             Action::make('print_staff_id')
                 ->label(__('Staff ID card'))
                 ->icon(Heroicon::OutlinedIdentification)

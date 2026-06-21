@@ -3,7 +3,7 @@
 namespace Modules\Staff\Tests\Unit;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\Staff\Enums\CredentialStatus;
 use Modules\Staff\Enums\CredentialType;
 use Modules\Staff\Models\Staff;
@@ -12,7 +12,13 @@ use Tests\TestCase;
 
 class StaffCredentialModelTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->migrateModules(['Core', 'Staff']);
+    }
 
     public function test_can_create_credential(): void
     {

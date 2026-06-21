@@ -2,7 +2,7 @@
 
 namespace Modules\Staff\Tests\Unit;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\Core\Models\Department;
 use Modules\Staff\Classes\Services\StaffAssignmentService;
 use Modules\Staff\Models\Staff;
@@ -10,13 +10,14 @@ use Tests\TestCase;
 
 class StaffAssignmentServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected StaffAssignmentService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->migrateModules(['Core', 'Staff']);
         $this->service = new StaffAssignmentService;
     }
 

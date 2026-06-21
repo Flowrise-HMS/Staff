@@ -12,6 +12,7 @@ use Modules\Staff\Filament\Clusters\StaffCluster;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Pages\CreateStaff;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Pages\EditStaff;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Pages\ListStaff;
+use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Pages\ListStaffActivities;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Pages\ViewStaff;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\RelationManagers\CredentialsRelationManager;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\RelationManagers\DepartmentsRelationManager;
@@ -67,6 +68,7 @@ class StaffResource extends Resource
             'create' => CreateStaff::route('/create'),
             'view' => ViewStaff::route('/{record}'),
             'edit' => EditStaff::route('/{record}/edit'),
+            'activities' => ListStaffActivities::route('/{record}/activities'),
         ];
     }
 }

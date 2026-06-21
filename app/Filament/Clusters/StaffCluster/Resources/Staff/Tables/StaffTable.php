@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Hash;
 use Modules\Core\Enums\UserRole;
 use Modules\Patient\Enums\Gender;
 use Modules\Staff\Classes\Services\StaffAccountService;
+use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
 use Ysfkaya\FilamentPhoneInput\Tables\PhoneColumn;
@@ -348,6 +349,10 @@ class StaffTable
                             ->success()
                             ->send();
                     }),
+                Action::make('activities')
+                    ->label('Activities')
+                    ->icon('heroicon-o-bell-alert')
+                    ->url(fn ($record) => StaffResource::getUrl('activities', ['record' => $record])),
             ]),
         ];
     }
