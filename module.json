@@ -1,7 +1,7 @@
 {
     "name": "Staff",
     "alias": "staff",
-    "description": "Staff module for managing healthcare providers, roles, departments, shifts, and user assignments. Handles staff scheduling, role-based permissions, and personnel management.",
+    "description": "Staff module for managing healthcare providers, departments, specialties, credentials, and linked user accounts.",
     "keywords": ["hms", "hospital", "staff", "employees", "roles", "healthcare"],
     "priority": 15,
     "providers": [
