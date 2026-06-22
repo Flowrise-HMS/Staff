@@ -10,10 +10,11 @@
     @endphp
 
     <div class="id-card">
-        <div class="id-card__banner id-card__banner--staff">
-            <span class="id-card__banner-title">{{ config('app.name') }}</span>
-            <span class="id-card__banner-label">{{ __('STAFF ID') }}</span>
-        </div>
+        @include('core::print.partials.id-card-banner', [
+            'branchId' => $staff->branch_id ?? $primaryStaffDepartment?->department?->branch_id,
+            'variant' => 'staff',
+            'label' => __('STAFF ID'),
+        ])
 
         <div class="id-card__body">
             <div class="id-card__photo-col">
@@ -68,7 +69,7 @@
                 </div>
 
                 <div class="id-card__footnote--small">
-                    {{ __('If found, please return to') }} {{ $branchName ?? config('app.name') }}
+                    {{ __('If found, please return to') }} {{ $branchName ?? app_settings($staff->branch_id ?? $primaryStaffDepartment?->department?->branch_id)->displayName() }}
                 </div>
             </div>
 
