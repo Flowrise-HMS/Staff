@@ -24,9 +24,9 @@ use Illuminate\Support\Facades\Hash;
 use Modules\Core\Enums\UserRole;
 use Modules\Patient\Enums\Gender;
 use Modules\Staff\Classes\Services\StaffAccountService;
-use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
+use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
 use Ysfkaya\FilamentPhoneInput\Tables\PhoneColumn;
 
 class StaffTable

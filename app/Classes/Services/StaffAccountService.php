@@ -17,6 +17,7 @@ class StaffAccountService
     public function setRole(array|string|null $roles)
     {
         $this->defaultRole = $roles;
+
         return $this;
     }
 

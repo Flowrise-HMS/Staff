@@ -3,6 +3,7 @@
 namespace Modules\Staff\Tests\Feature;
 
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Modules\Staff\Enums\CredentialType;
 use Modules\Staff\Models\Staff;
 use Modules\Staff\Models\StaffCredential;
 use Tests\TestCase;
@@ -35,7 +36,7 @@ class StaffCredentialModelTest extends TestCase
     public function test_staff_has_many_credentials(): void
     {
         $staff = Staff::factory()->create();
-        $types = \Modules\Staff\Enums\CredentialType::cases();
+        $types = CredentialType::cases();
         foreach (array_slice($types, 0, 3) as $type) {
             StaffCredential::factory()->create(['staff_id' => $staff->id, 'credential_type' => $type]);
         }
