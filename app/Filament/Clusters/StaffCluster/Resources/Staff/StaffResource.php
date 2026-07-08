@@ -7,6 +7,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Modules\Core\Enums\NavigationGroup;
 use Modules\Staff\Classes\Services\StaffSearchService;
 use Modules\Staff\Filament\Clusters\StaffCluster;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Pages\CreateStaff;
@@ -27,6 +28,8 @@ class StaffResource extends Resource
     protected static ?string $model = Staff::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
+
+    protected static string|\UnitEnum|null $navigationGroup = NavigationGroup::ADMINISTRATION;
 
     protected static ?string $cluster = StaffCluster::class;
 
