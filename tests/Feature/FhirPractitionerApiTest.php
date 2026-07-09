@@ -10,9 +10,7 @@ class FhirPractitionerApiTest extends TestCase
     {
         parent::setUp();
 
-        if (!env('FHIR_INTEGRATION_TESTS', false)) {
-            $this->markTestSkipped('Integration tests require FHIR_INTEGRATION_TESTS=true and database setup.');
-        }
+        $this->requireModule('FHIR');
     }
 
     public function test_search_requires_authentication(): void

@@ -3,6 +3,7 @@
 namespace Modules\Staff\Tests\Unit;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Modules\Core\Models\Branch;
 use Modules\Core\Models\Department;
@@ -194,7 +195,7 @@ class FhirPractitionerRoleTransformerTest extends TestCase
     {
         $staffDept = $this->createMinimalStaffDepartment();
 
-        $locationInactive = new \Modules\Core\Models\Location;
+        $locationInactive = new Location;
         $locationInactive->id = 'loc-uuid-3';
         $locationInactive->is_active = false;
 
@@ -216,7 +217,7 @@ class FhirPractitionerRoleTransformerTest extends TestCase
 
         $query = $transformer->query();
 
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Builder::class, $query);
+        $this->assertInstanceOf(Builder::class, $query);
     }
 
     public function test_searchable_parameters_contains_expected_keys(): void

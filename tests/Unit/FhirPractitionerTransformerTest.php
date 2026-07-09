@@ -3,6 +3,7 @@
 namespace Modules\Staff\Tests\Unit;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Modules\Core\Enums\Title;
 use Modules\FHIR\Contracts\FhirResourceContract;
 use Modules\Patient\Enums\Gender;
@@ -283,7 +284,7 @@ class FhirPractitionerTransformerTest extends TestCase
 
         $query = $transformer->query();
 
-        $this->assertInstanceOf(\Illuminate\Database\Eloquent\Builder::class, $query);
+        $this->assertInstanceOf(Builder::class, $query);
     }
 
     public function test_searchable_parameters_contains_expected_keys(): void
