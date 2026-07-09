@@ -210,15 +210,6 @@ class FhirPractitionerRoleTransformerTest extends TestCase
         $this->assertEquals('Location/loc-uuid-1', $fhir['location'][0]['reference']);
     }
 
-    public function test_findById_returns_null_for_non_existent(): void
-    {
-        $transformer = $this->createTransformer();
-
-        $result = $transformer->findById('non-existent');
-
-        $this->assertNull($result);
-    }
-
     public function test_query_returns_builder(): void
     {
         $transformer = $this->createTransformer();

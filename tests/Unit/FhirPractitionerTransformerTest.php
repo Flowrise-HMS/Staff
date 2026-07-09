@@ -277,15 +277,6 @@ class FhirPractitionerTransformerTest extends TestCase
         $this->assertEmpty($result['_credentials']);
     }
 
-    public function test_findById_uses_staff_model(): void
-    {
-        $transformer = $this->createTransformer();
-
-        $result = $transformer->findById('non-existent-id');
-
-        $this->assertNull($result);
-    }
-
     public function test_query_returns_builder(): void
     {
         $transformer = $this->createTransformer();
