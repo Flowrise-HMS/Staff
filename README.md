@@ -10,6 +10,7 @@ Patient care is delivered by **named individuals** (doctors, nurses, lab techs, 
 
 - **Depends on Core** for branches, departments, locations, and the shared user model.
 - **Clinical and Appointment** flows assume staff (often modeled as providers or employees) exist when documenting encounters, assigning care, or booking time.
+- **FHIR module** exposes Practitioner and PractitionerRole resources via Staff transformers (`/api/v1/fhir/Practitioner`, `/api/v1/fhir/PractitionerRole`).
 
 ```mermaid
 flowchart LR
