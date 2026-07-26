@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Modules\Core\Support\SuperAdmin;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
 
 class ViewStaff extends ViewRecord
@@ -18,6 +19,7 @@ class ViewStaff extends ViewRecord
     {
         return [
             Action::make('activities')
+                ->visible(fn (): bool => SuperAdmin::check())
                 ->label('Activities')
                 ->icon('heroicon-o-bell-alert')
                 ->url(fn () => StaffResource::getUrl('activities', ['record' => $this->getRecord()])),

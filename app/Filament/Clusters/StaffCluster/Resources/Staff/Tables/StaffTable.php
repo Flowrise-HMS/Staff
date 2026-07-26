@@ -22,6 +22,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Modules\Core\Enums\UserRole;
+use Modules\Core\Support\SuperAdmin;
 use Modules\Patient\Enums\Gender;
 use Modules\Staff\Classes\Services\StaffAccountService;
 use Modules\Staff\Enums\EmploymentStatus;
@@ -350,6 +351,7 @@ class StaffTable
                             ->send();
                     }),
                 Action::make('activities')
+                    ->visible(fn (): bool => SuperAdmin::check())
                     ->label('Activities')
                     ->icon('heroicon-o-bell-alert')
                     ->url(fn ($record) => StaffResource::getUrl('activities', ['record' => $record])),
