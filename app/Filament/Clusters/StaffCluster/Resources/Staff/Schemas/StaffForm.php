@@ -171,6 +171,12 @@ class StaffForm
                 DatePicker::make('hire_date')
                     ->default(now())
                     ->label('Hire Date'),
+
+                TextInput::make('zk_user_id')
+                    ->label('Device Badge (zk_user_id)')
+                    ->helperText('Must match the badge/PIN enrolled on the attendance machine.')
+                    ->maxLength(255)
+                    ->placeholder('e.g. 1001'),
             ]);
     }
 

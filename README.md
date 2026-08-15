@@ -9,7 +9,8 @@ Patient care is delivered by **named individuals** (doctors, nurses, lab techs, 
 ## Where Staff fits in FlowRise
 
 - **Depends on Core** for branches, departments, locations, and the shared user model.
-- **Clinical and Appointment** flows assume staff (often modeled as providers or employees) exist when documenting encounters, assigning care, or booking time.
+- **Clinical and Appointment** flows assume staff exist when documenting encounters, assigning care, or booking time.
+- **Attendance** maps biometric badges via `zk_user_id` on staff.
 - **FHIR module** exposes Practitioner and PractitionerRole resources via Staff transformers (`/api/v1/fhir/Practitioner`, `/api/v1/fhir/PractitionerRole`).
 
 ```mermaid
@@ -18,9 +19,11 @@ flowchart LR
   Staff[Staff]
   Clinical[Clinical]
   Appointment[Appointment]
+  Attendance[Attendance]
   Core --> Staff
   Staff --> Clinical
   Staff --> Appointment
+  Staff --> Attendance
 ```
 
 ## What you can do with it (everyday language)

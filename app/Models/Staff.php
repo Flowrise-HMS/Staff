@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Modules\Attendance\Models\AttendanceRecord;
+use Modules\Attendance\Models\DailyAttendance;
 use Modules\Core\Enums\Title;
 use Modules\Core\Models\BaseModel;
 use Modules\Core\Models\Department;
@@ -30,6 +32,7 @@ class Staff extends BaseModel
         'branch_id',
         'user_id',
         'staff_number',
+        'zk_user_id',
         'title',
         'first_name',
         'middle_name',
@@ -140,6 +143,16 @@ class Staff extends BaseModel
         return $this->credentials()
             ->where('expiry_date', '<=', now()->addDays($days))
             ->where('expiry_date', '>=', now());
+    }
+
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    public function dailyAttendance(): HasMany
+    {
+        return $this->hasMany(DailyAttendance::class);
     }
 
     public function scopeActive($query)
