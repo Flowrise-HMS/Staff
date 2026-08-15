@@ -4,6 +4,7 @@ namespace Modules\Staff\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
+use Modules\Core\Support\OptionalClass;
 use Modules\Staff\Classes\Services\StaffAccountService;
 use Modules\Staff\Classes\Services\StaffAssignmentService;
 use Modules\Staff\Classes\Services\StaffCredentialService;
@@ -30,6 +31,40 @@ class StaffServiceProvider extends ModuleServiceProvider
         $this->registerViews();
         Gate::policy(Staff::class, StaffPolicy::class);
         $this->registerServices();
+        $this->registerOptionalPeerRelations();
+    }
+
+    protected function registerOptionalPeerRelations(): void
+    {
+        OptionalClass::when(
+            'Modules\\Appointment\\Models\\Appointment',
+            function (string $appointmentClass): void {
+                $appointmentClass::resolveRelationUsing('primaryPractitioner', function ($appointment) {
+                    return $appointment->belongsTo(Staff::class, 'practitioner_primary_id', 'id');
+                });
+            },
+            'Appointment',
+        );
+
+        OptionalClass::when(
+            'Modules\\Appointment\\Models\\ScheduleBlock',
+            function (string $scheduleBlockClass): void {
+                $scheduleBlockClass::resolveRelationUsing('practitioner', function ($block) {
+                    return $block->belongsTo(Staff::class, 'practitioner_id', 'id');
+                });
+            },
+            'Appointment',
+        );
+
+        OptionalClass::when(
+            'Modules\\Appointment\\Models\\WaitlistEntry',
+            function (string $waitlistClass): void {
+                $waitlistClass::resolveRelationUsing('preferredPractitioner', function ($entry) {
+                    return $entry->belongsTo(Staff::class, 'preferred_practitioner_id', 'id');
+                });
+            },
+            'Appointment',
+        );
     }
 
     protected function registerViews(): void

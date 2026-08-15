@@ -8,6 +8,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Modules\Core\Enums\NavigationGroup;
+use Modules\Core\Support\OptionalClass;
 use Modules\Staff\Classes\Services\StaffSearchService;
 use Modules\Staff\Filament\Clusters\StaffCluster;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Pages\CreateStaff;
@@ -57,11 +58,29 @@ class StaffResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
+        $relations = [
             CredentialsRelationManager::class,
             DepartmentsRelationManager::class,
             SpecialtiesRelationManager::class,
         ];
+
+        $optionalByModule = [
+            'Attendance' => [
+                'Modules\\Attendance\\Filament\\RelationManagers\\Staff\\StaffAttendanceRecordsRelationManager',
+                'Modules\\Attendance\\Filament\\RelationManagers\\Staff\\StaffDailyAttendanceRelationManager',
+            ],
+        ];
+
+        foreach ($optionalByModule as $module => $classes) {
+            foreach ($classes as $relationClass) {
+                $resolved = OptionalClass::resolve($relationClass, $module);
+                if ($resolved !== null) {
+                    $relations[] = $resolved;
+                }
+            }
+        }
+
+        return array_values(array_unique($relations));
     }
 
     public static function getPages(): array
