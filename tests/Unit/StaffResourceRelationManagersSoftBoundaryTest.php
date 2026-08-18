@@ -68,4 +68,37 @@ class StaffResourceRelationManagersSoftBoundaryTest extends TestCase
             $relations,
         );
     }
+
+    public function test_it_includes_appointment_relation_manager_when_appointment_is_enabled(): void
+    {
+        $this->requireModule('Appointment');
+
+        $relations = StaffResource::getRelations();
+
+        $this->assertContains(
+            'Modules\\Appointment\\Filament\\RelationManagers\\Staff\\StaffAppointmentsRelationManager',
+            $relations,
+        );
+    }
+
+    public function test_it_skips_appointment_relation_manager_when_appointment_is_disabled(): void
+    {
+        $this->requireModule('Appointment');
+
+        $module = Module::find('Appointment');
+        $this->assertNotNull($module);
+
+        try {
+            $module->disable();
+
+            $relations = StaffResource::getRelations();
+
+            $this->assertNotContains(
+                'Modules\\Appointment\\Filament\\RelationManagers\\Staff\\StaffAppointmentsRelationManager',
+                $relations,
+            );
+        } finally {
+            $module->enable();
+        }
+    }
 }

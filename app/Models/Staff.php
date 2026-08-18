@@ -23,6 +23,9 @@ use Modules\Staff\Database\Factories\StaffFactory;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
 
+/**
+ * @method \Illuminate\Database\Eloquent\Relations\HasMany appointments()
+ */
 class Staff extends BaseModel
 {
     /** @use HasFactory<StaffFactory> */

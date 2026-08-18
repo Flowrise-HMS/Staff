@@ -69,6 +69,9 @@ class StaffResource extends Resource
                 'Modules\\Attendance\\Filament\\RelationManagers\\Staff\\StaffAttendanceRecordsRelationManager',
                 'Modules\\Attendance\\Filament\\RelationManagers\\Staff\\StaffDailyAttendanceRelationManager',
             ],
+            'Appointment' => [
+                'Modules\\Appointment\\Filament\\RelationManagers\\Staff\\StaffAppointmentsRelationManager',
+            ],
         ];
 
         foreach ($optionalByModule as $module => $classes) {
