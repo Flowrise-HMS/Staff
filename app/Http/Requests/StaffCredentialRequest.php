@@ -16,7 +16,14 @@ class StaffCredentialRequest extends FormRequest
 
     public function rules(): array
     {
-        $credentialId = $this->route('credential')?->id;
+        /*
+         * The route parameter is a model under panel route-model binding but a bare
+         * id string on nested API routes, where the credential is resolved through
+         * its parent instead. Reading `?->id` alone throws on the string form and
+         * yields null, which makes `ignore()` a no-op and a record fail uniqueness
+         * against itself. Same pattern as PatientRequest.
+         */
+        $credentialId = $this->route('credential')?->id ?? $this->route('credential');
 
         return [
             'staff_id' => ['required', 'uuid', 'exists:staff,id'],

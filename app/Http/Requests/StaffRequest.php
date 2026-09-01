@@ -18,7 +18,7 @@ class StaffRequest extends FormRequest
 
     public function rules(): array
     {
-        $staffId = $this->route('staff')?->id;
+        $staffId = $this->route('staff')?->id ?? $this->route('staff');
 
         return [
             'branch_id' => ['required', 'uuid', 'exists:branches,id'],
