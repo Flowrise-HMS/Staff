@@ -4,11 +4,13 @@ namespace Modules\Staff\Classes\Fhir;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Modules\FHIR\Contracts\FhirResourceContract;
+use Modules\FHIR\Contracts\FhirWritableResourceContract;
+use Modules\Staff\Classes\Services\StaffCredentialService;
+use Modules\Staff\Classes\Services\StaffService;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Models\Staff;
 
-class FhirPractitionerTransformer implements FhirResourceContract
+class FhirPractitionerTransformer implements FhirWritableResourceContract
 {
     public function resourceType(): string
     {
@@ -72,14 +74,96 @@ class FhirPractitionerTransformer implements FhirResourceContract
         return $result;
     }
 
+    public function createFromFhir(array $fhirResource): Model
+    {
+        [$attributes, $credentials] = $this->splitAttributes($fhirResource);
+
+        $staff = app(StaffService::class)->create($attributes);
+
+        $this->syncCredentials($staff, $credentials);
+
+        return $staff->fresh();
+    }
+
+    public function updateFromFhir(Model $model, array $fhirResource): Model
+    {
+        /** @var Staff $model */
+        [$attributes, $credentials] = $this->splitAttributes($fhirResource);
+
+        $staff = app(StaffService::class)->update($model, $attributes);
+
+        $this->syncCredentials($staff, $credentials);
+
+        return $staff->fresh();
+    }
+
+    /**
+     * Separate Staff columns from the qualification rows.
+     *
+     * `fromFhir()` emits `_credentials` for FHIR `qualification` entries, which are
+     * StaffCredential records rather than columns on Staff and so must not reach
+     * mass assignment.
+     *
+     * @param  array<string, mixed>  $fhirResource
+     * @return array{0: array<string, mixed>, 1: list<array<string, mixed>>}
+     */
+    private function splitAttributes(array $fhirResource): array
+    {
+        $attributes = $this->fromFhir($fhirResource);
+
+        $credentials = $attributes['_credentials'] ?? [];
+        unset($attributes['_credentials']);
+
+        $attributes = array_filter(
+            $attributes,
+            static fn (mixed $value): bool => $value !== null && $value !== '',
+        );
+
+        return [$attributes, $credentials];
+    }
+
+    /**
+     * Qualifications are matched on credential number, which is unique. An unknown
+     * number is added; a known one is left alone rather than overwritten, because
+     * the verification state attached to it is recorded by staff and is not
+     * something an inbound FHIR resource is entitled to reset.
+     *
+     * @param  list<array<string, mixed>>  $credentials
+     */
+    private function syncCredentials(Staff $staff, array $credentials): void
+    {
+        $service = app(StaffCredentialService::class);
+
+        foreach ($credentials as $credential) {
+            if (empty($credential['credential_number']) || empty($credential['credential_type'])) {
+                continue;
+            }
+
+            $exists = $staff->credentials()
+                ->where('credential_number', $credential['credential_number'])
+                ->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            $service->create($staff, $credential);
+        }
+    }
+
     public function findById(string $id): ?Model
     {
         return Staff::withTrashed()->find($id);
     }
 
+    /**
+     * `toFhir()` reads `credentials` behind a relationLoaded() guard, so without
+     * eager loading a bulk export emits every practitioner with no qualifications
+     * at all — wrong data rather than slow data.
+     */
     public function query(): Builder
     {
-        return Staff::query();
+        return Staff::query()->with(['credentials']);
     }
 
     public function searchableParameters(): array

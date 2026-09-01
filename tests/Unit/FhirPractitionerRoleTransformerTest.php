@@ -344,8 +344,39 @@ test('searchableParameters has expected keys', function () use ($transformer) {
     expect($params['practitioner'])->toHaveKey('column', 'staff_id');
 });
 
-test('validateBusinessRules passes with practitioner reference', function () use ($transformer) {
+/*
+ * A practitioner reference alone is no longer sufficient.
+ *
+ * PractitionerRole became writable, and `staff_departments.department_id` is NOT
+ * NULL. The FHIR representation does not carry the department directly — it is only
+ * reachable backwards from `location`, and only unambiguously when a location maps
+ * to exactly one department. Validation refuses anything else rather than letting a
+ * write guess, because assigning a practitioner to the wrong department is a
+ * clinical routing error.
+ *
+ * This test previously asserted that a practitioner reference alone validated,
+ * which described a create that would have failed at the database instead.
+ */
+test('validateBusinessRules requires a resolvable department', function () use ($transformer) {
     $resource = ['resourceType' => 'PractitionerRole', 'practitioner' => ['reference' => 'Practitioner/uuid']];
+
+    $errors = $transformer->validateBusinessRules($resource);
+
+    expect($errors)->toHaveKey('location');
+});
+
+test('validateBusinessRules passes when the location resolves to one department', function () use ($transformer) {
+    $organization = Organization::factory()->create();
+    $branch = Branch::factory()->create(['organization_id' => $organization->id]);
+    $location = Location::factory()->create(['branch_id' => $branch->id]);
+    $department = Department::factory()->create();
+    $department->locations()->attach($location->id, ['is_primary' => true]);
+
+    $resource = [
+        'resourceType' => 'PractitionerRole',
+        'practitioner' => ['reference' => 'Practitioner/uuid'],
+        'location' => [['reference' => "Location/{$location->id}"]],
+    ];
 
     $errors = $transformer->validateBusinessRules($resource);
 
