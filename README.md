@@ -72,5 +72,5 @@ Module rollout overview: [Module status](../../docs/shared/module-status.md).
 - **Namespace:** `Modules\Staff\...`
 - **Service provider:** `Modules\Staff\Providers\StaffServiceProvider`
 - **FHIR alignment:** the implementation plan describes how staff maps to industry-standard **Practitioner** concepts for interoperability; you do not need to know FHIR to use the screens.
-- **Custom permission:** `print_staff_id`. Staff numbers are generated as `STF-<year>-<sequence>` by `Staff::generateStaffNumber()` (the Core `staff_prefix` setting is not read).
+- **Custom permission:** `print_staff_id`. Staff numbers are generated as `<staff_prefix>-<year>-<sequence>` by `Staff::generateStaffNumber()` (prefix from the Core Branding & numbering settings, default `STF`). The `staff_credentials_mail` notification setting switches the credentials email on or off; the in-app notification never stores the password.
 - **Tests:** `php artisan test --compact Modules/Staff/tests` (17 test files).
