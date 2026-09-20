@@ -28,11 +28,12 @@ flowchart LR
 
 ## What you can do with it (everyday language)
 
-- Create and maintain **staff profiles** (name, employment type, status).
-- Record **credentials** (license numbers, issuing body, expiry, verification state).
+- Create and maintain **staff profiles** (name, employment type, status, hire date, ZK badge id) under **Operations → Staff**.
+- Record **credentials** (license numbers, issuing body, expiry, verification state, uploaded document).
 - Assign staff to **departments** and mark a **primary department** when someone works in more than one area.
-- Track **specialties** or skills relevant to routing work (for example, cardiology vs. lab).
-- Support **HR-style workflows** (activation, deactivation, audit-friendly updates) without deleting history.
+- Track **specialties** or skills relevant to routing work (for example, cardiology vs. lab), with certificate uploads.
+- Create and manage the staff member's **login account** (create, manage, reset password, resend credentials email) and print a **staff ID card**.
+- Support **HR-style workflows** (Update Status: active, inactive, on leave, suspended, terminated, pending verification) without deleting history.
 
 ## How it works (simple)
 
@@ -45,12 +46,15 @@ flowchart LR
 
 | Path | Purpose |
 |------|---------|
-| `app/Models/` | Staff, credentials, department links, specialties. |
-| `app/Classes/Services/` | CRUD, search, assignments—business logic. |
-| `app/Filament/` | Staff resources, forms, relation managers (credentials, departments). |
-| `app/Policies/` | Authorization for viewing or editing staff data. |
-| `app/Events/`, `app/Notifications/` | Lifecycle hooks and alerts (for example, around verification). |
-| `database/migrations/` | Tables for staff-related data. |
+| `app/Models/` | `Staff`, `StaffCredential`, `StaffDepartment`, `StaffSpecialty`. |
+| `app/Classes/Services/` | `StaffService`, `StaffSearchService`, `StaffAssignmentService`, `StaffCredentialService`, `StaffAccountService` (user account creation, credentials email, password reset). |
+| `app/Classes/Fhir/` | `FhirPractitionerTransformer`, `FhirPractitionerRoleTransformer` (full CRUD through the FHIR module). |
+| `app/Filament/` | `StaffCluster` (Operations group), `StaffResource` (list/create/view/edit/activities), relation managers (Credentials, Departments, Specialties), `StaffExporter`. |
+| `app/Http/` | `StaffIdCardController` (`GET /staff/{staff}/id-card`), REST API controllers (`/api/v1/staff`, `/api/v1/staff/{staff}/credentials`; registered when the Api module is enabled). |
+| `app/Policies/` | `StaffPolicy`. |
+| `app/Events/`, `app/Notifications/` | `StaffRegistered/Updated/Deactivated/Reactivated`, `CredentialVerified/Rejected/Renewed/Expired`; `StaffCredentialsNotification`. |
+| `app/Enums/` | `StaffType`, `EmploymentStatus`, `CredentialType` (24 values), `CredentialStatus`. |
+| `database/migrations/` | 6 migrations (staff, staff_credentials, staff_departments, staff_specialties, `zk_user_id`, ...). |
 
 ## Dependencies
 
@@ -60,7 +64,7 @@ Module rollout overview: [Module status](../../docs/shared/module-status.md).
 
 ## Further reading
 
-- **Implementation plan:** [docs/implementation-plan.md](docs/implementation-plan.md)
+- **Implementation record:** [docs/implementation-plan.md](docs/implementation-plan.md)
 - **User-facing intro:** [Staff management](../../docs/user-guide/staff-management.md)
 
 ## For developers
@@ -68,4 +72,5 @@ Module rollout overview: [Module status](../../docs/shared/module-status.md).
 - **Namespace:** `Modules\Staff\...`
 - **Service provider:** `Modules\Staff\Providers\StaffServiceProvider`
 - **FHIR alignment:** the implementation plan describes how staff maps to industry-standard **Practitioner** concepts for interoperability; you do not need to know FHIR to use the screens.
-- **Tests:** `tests/` inside this module; run selectively from the repo root.
+- **Custom permission:** `print_staff_id`. Staff numbers are generated as `STF-<year>-<sequence>` by `Staff::generateStaffNumber()` (the Core `staff_prefix` setting is not read).
+- **Tests:** `php artisan test --compact Modules/Staff/tests` (17 test files).

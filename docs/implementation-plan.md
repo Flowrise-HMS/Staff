@@ -1,273 +1,65 @@
-# STAFF MODULE IMPLEMENTATION PLAN
+# Staff Module Implementation Record
 
-**Document Status:** Draft
-**Last Updated:** April 2026
-**Module:** FlowRise HMS Staff Module
+**Document Status:** Implemented (verified against code 2026-09-20)
+**Module:** FlowRise HMS Staff Module (`Modules/Staff`)
 
----
-
-## 1. EXECUTIVE SUMMARY
-
-The Staff module manages healthcare employees/providers with roles, credentials, department assignments, and FHIR interoperability.
-
-This module is the FOUNDATION for clinical operations - every clinical action is performed by a staff member.
-
-### Core Entities
-
-| Entity | Purpose |
-|--------|--------|
-| **Staff** | Healthcare employee/provider |
-| **StaffCredential** | Licenses, certifications |
-| **StaffDepartment** | Department assignments |
-| **StaffSpecialty** | Specialty/skill tracking |
+This document replaces the original April 2026 implementation plan and describes the module as built. Staff-facing instructions are in [docs/user-guide/staff-management.md](../../../docs/user-guide/staff-management.md); account and role administration in [docs/admin-guide/user-management.md](../../../docs/admin-guide/user-management.md).
 
 ---
 
-## 1. Foundation & Models
+## 1. Scope
 
-### 1.1 Core Models
+The Staff module owns the people directory: staff profiles, professional credentials, department assignments, specialties, the link to the login account (`users.id`), the staff ID card, REST endpoints for staff and credentials, and the FHIR `Practitioner` / `PractitionerRole` transformers. Attendance (badge id `zk_user_id`) and Appointment (practitioner) build on it.
 
-- [x] **Staff (Employee)**
-  - UUID-based identifier
-  - User account link (CoreUser)
-  - Personal info: name, DOB, gender, photo
-  - Employee ID (staff number - unique)
-  - Employment info: hire date, termination date
-  - Employment status (active, inactive, terminated, on_leave)
-  - Staff type (full_time, part_time, contract, volunteer)
-  - Specialties (many-to-many)
-  - Department assignments (many-to-many with primary)
-  - Role assignments (Provider, Nurse, Admin, etc.)
-
-- [x] **StaffCredential**
-  - License/registration numbers
-  - Issued by (authority)
-  - Issue date, expiry date
-  - Verification status
-  - Document upload (license scan)
-
-- [ ] **StaffAvailability**
-  - Working days/hours per department
-  - Shift patterns
-  - On-call schedules
-
-- [ ] **StaffSchedule** (Optional - moved to Appointments Module)
-  - Weekly schedule template
-  - Exception dates
-
-### 1.2 Enums Needed
-
-- [x] **StaffType** - full_time, part_time, contract, volunteer, intern
-- [x] **EmploymentStatus** - active, inactive, terminated, suspended, on_leave
-- [x] **StaffRole** - provider, nurse, administrator, billing, receptionist, pharmacist, lab_technician, radiographer, physiotherapist, social_worker, counselor
+Not implemented (and not planned in this module): availability/roster models, on-call schedules, a `StaffRole` enum (system roles come from Core's `UserRole` and Filament Shield), credential-expiry notifications (the `CredentialExpired` event exists but nothing schedules `StaffCredentialService::processExpiredCredentials()`).
 
 ---
 
-## 2. Services Layer
+## 2. Database
 
-### 2.1 StaffService
-- [x] CRUD operations for staff
-- [x] Registration with events dispatch
-- [x] Profile updates with events
-- [x] Search and filtering
+6 migrations:
 
-### 2.2 StaffCredentialService
-- [x] Add/update credentials
-- [x] Verify credential
-- [x] Track expiry
-- [ ] Document upload
-
-### 2.3 StaffAssignmentService
-- [x] Assign to departments
-- [x] Set primary department
-- [x] Assign roles
-- [x] Manage specialties
-
-### 2.4 StaffScheduleService (Optional)
-- [ ] Set availability
-- [ ] Update working hours
+| Table | Purpose |
+|-------|---------|
+| `staff` | UUID id, `user_id` (login), `branch_id` (added 2026-05-09), `staff_number` (unique, `STF-<year>-<sequence>`), title, names, gender, date_of_birth, `staff_type`, `employment_status`, hire/termination dates and reason, `contact` (JSON), `address` (JSON), `emergency_contact` (JSON), `zk_user_id` (biometric badge, added 2026-08-10), soft deletes |
+| `staff_credentials` | credential_type, credential_number, issuing_authority, issuing_country, issuing_state, issue_date, expiry_date, status, verification_notes, verified_by/at, `document_path` (uploaded scan) |
+| `staff_departments` | staff_id, department_id, designation, start_date, end_date, is_primary |
+| `staff_specialties` | specialty_name, specialty_code, description, issuing_body, certificate_number, certification_date, expiry_date, is_primary, certificate_path |
 
 ---
 
-## 3. Role-Based Access Control (RBAC)
+## 3. Code structure (`app/`)
 
-### 3.1 Staff Roles
-- [x] **Provider** - Doctors, Specialists, GPs
-- [x] **Nurse** - RN, EN, ANM
-- [x] **Administrative** - Admin staff, Receptionists
-- [x] **Billing** - Finance team
-- [x] **Pharmacist** - Pharmacy staff
-- [x] **Lab Technician** - Laboratory staff
-- [x] **Radiographer** - Imaging staff
-- [x] **Physiotherapist** - Rehab staff
-- [x] **Social Worker** - Social services
-- [x] **Counselor** - Mental health
-
-### 3.2 Role Permissions Matrix
-- [ ] Map each role to Filament permissions
-- [x] Integrate with Core's permission system
+| Area | Contents |
+|------|----------|
+| `Models/` | `Staff` (generates `staff_number` on create), `StaffCredential`, `StaffDepartment`, `StaffSpecialty` |
+| `Enums/` | `StaffType` (full_time, part_time, contract, volunteer, intern, resident, consultant), `EmploymentStatus` (active, inactive, on_leave, suspended, terminated, pending_verification), `CredentialType` (24 values), `CredentialStatus` (pending, verified, expired, rejected, revoked, under_review) |
+| `Classes/Services/` | `StaffService` (CRUD/search), `StaffSearchService` (table + global search), `StaffAssignmentService` (assign/remove/transfer departments, bulk assign, specialties, primary specialty, summary), `StaffCredentialService` (create/update/verify/reject/renew/bulk verify, expiring, pending, expired processing, statistics), `StaffAccountService` (create user account with generated username/email/password, send/resend credentials email, reset password, activate/deactivate/unlink account, account status) |
+| `Classes/Fhir/` | `FhirPractitionerTransformer`, `FhirPractitionerRoleTransformer` (read/search/create/update/delete through `Modules/FHIR`) |
+| `Events/` | `StaffRegistered`, `StaffUpdated`, `StaffDeactivated`, `StaffReactivated`, `CredentialVerified`, `CredentialRejected`, `CredentialRenewed`, `CredentialExpired` |
+| `Notifications/` | `StaffCredentialsNotification` (login details email) |
+| `Http/` | `StaffIdCardController` (`GET /staff/{staff}/id-card`, auth + verified), API `StaffController` (`GET/POST /api/v1/staff`, `GET/PUT /api/v1/staff/{id}`) and `StaffCredentialController` (`GET/POST /api/v1/staff/{staff}/credentials`, `PUT .../credentials/{credential}`) registered through Core's `ApiRouteRegistrar` when the Api module is enabled; form requests; `StaffTransformer` / `StaffCredentialTransformer` API resources |
+| `Filament/` | `StaffCluster` (sidebar Operations → Staff, sort 20), `StaffResource` (pages List, Create, View, Edit, Activities; schemas `StaffForm`, `StaffInfolist`; `StaffTable`), relation managers `CredentialsRelationManager`, `DepartmentsRelationManager`, `SpecialtiesRelationManager`; soft-dependency managers from Attendance (records, daily attendance) and Appointment (staff appointments); `StaffExporter` |
+| `Policies/` | `StaffPolicy` |
+| `database/` | factories for all four models; `StaffDatabaseSeeder`, `StaffCustomPermissionSeeder` (`print_staff_id` → super_admin) |
 
 ---
 
-## 4. FHIR Integration
+## 4. Filament behaviour
 
-### 4.1 FHIR Resources
-- [x] **Practitioner** - Maps to Staff
-  - Identifier (staff number)
-  - Active status
-  - Name (humanName)
-  - Telecom (phone, email)
-  - Address
-  - Gender, birthDate
-  - Qualification (credentials)
-  - PractitionerRole (department assignments)
-
-- [x] **PractitionerRole** - Maps to Staff-Department assignment
-  - Practitioner reference
-  - Organization (Branch)
-  - Location (Facility/Department)
-  - Role (StaffRole)
-  - Specialty
-  - Active period
+- **Form** sections: Personal Information (branch, title, names, gender, date of birth), Contact Information, Address, Employment Details (staff type, employment status, hire date, ZK user ID), Emergency Contact.
+- **Table**: Staff #, Name (+ account icon), Gender, Type, Status, Department, Email, Phone, Hired, Tenure; filters staff type, status, gender, department, with/without user account, hire date range; row actions View, Staff ID Card, Edit, Delete, Create User Account, Manage Account, Reset Password, Resend Credentials, Update Status, Activities; bulk delete.
+- **View page** header: Activities, Staff ID card (needs `print_staff_id`), Edit, Delete. Infolist: summary (staff number, type, status), Personal Information, Employment (hire date, tenure, termination), Contact, Address, Emergency Contact.
+- **Account actions** call `StaffAccountService`; "Create User Account" has a "Send credentials via email" toggle (default on) and a role multi-select.
 
 ---
 
-## 5. User Interface (Filament)
+## 5. Permissions
 
-### 5.1 Staff Management
-- [x] Staff List Table
-  - Search by name, staff number, department
-  - Filter by role, status, department
-  - Bulk actions
-
-- [x] Create/Edit Staff Form
-  - Personal Information
-  - Employment Details
-  - Department Assignment
-  - Role Assignment
-  - Credentials
-
-- [x] Staff Profile View
-  - Full profile display
-  - Credentials list
-  - Department assignments
-  - Activity logs
-
-### 5.2 Credential Management
-- [x] Credential List per Staff
-- [x] Add/Edit Credential Form
-- [ ] Upload License Document
-- [x] Verification workflow
-
-### 5.3 Settings
-- [x] Staff Roles Management
-- [x] Specialties Management
+Shield abilities on `Staff` plus `View StaffCluster`; custom `print_staff_id` (config `permissions`). Credential/department/specialty managers inherit the staff permissions.
 
 ---
 
-## 6. EVENTS
+## 6. Tests
 
-- [x] **StaffRegistered** - Dispatched on staff creation
-- [x] **StaffUpdated** - Dispatched on profile update
-- [x] **StaffDeactivated** - Dispatched on termination
-- [x] **StaffReactivated** - Dispatched on reactivation
-- [x] **CredentialVerified** - Dispatched on credential verification
-- [ ] **CredentialExpired** - Dispatched when credential expires
-
----
-
-## 7. Testing
-
-### 7.1 Unit Tests
-- [ ] StaffServiceTest
-- [ ] StaffCredentialServiceTest
-- [ ] StaffAssignmentServiceTest
-
-### 7.2 Coverage Target
-- [ ] 90%+ code coverage
-
----
-
-## 8. DEPENDENCIES
-
-### 8.1 Internal Modules
-- [x] Core (Branch, Department, Location, User)
-
-### 8.2 External
-- [x] Spatie MediaLibrary (for credentials documents)
-- [x] Filament (already in use)
-
----
-
-## Implementation Sequence
-
-### Phase 3.1: Foundation (Priority: Critical)
-1. Create Staff model + migration
-2. Create Enums
-3. Create StaffService with CRUD
-4. Basic Filament resource
-
-### Phase 3.2: Credentials (Priority: High)
-5. StaffCredential model
-6. StaffCredentialService
-7. Credential management UI
-
-### Phase 3.3: Assignments (Priority: High)
-8. Department/Role assignment
-9. Specialties
-
-### Phase 3.4: RBAC (Priority: High)
-10. Role permissions
-11. Integration with auth
-
-### Phase 3.5: FHIR (Priority: Medium)
-12. FHIR Practitioner
-13. FHIR PractitionerRole
-
-### Phase 3.6: Polish (Priority: Medium)
-14. Events
-15. Tests
-16. UI improvements
-
----
-
-## 9. IMPLEMENTATION CHECKLIST
-
-### 9.1 What's Done ✅
-
-| Item | Notes |
-|------|-------|
-| Database migrations | staff, staff_credentials, staff_departments, staff_specialties |
-| Staff model | With HasUuids, relationships |
-| StaffCredential model | License tracking |
-| StaffDepartment model | Department assignments |
-| StaffSpecialty model | Specialty tracking |
-| Enums | StaffType, EmploymentStatus, StaffRole, CredentialType |
-| StaffService | Full CRUD + search |
-| StaffCredentialService | Credential management |
-| StaffAssignmentService | Department/role assignment |
-| StaffSearchService | Global search |
-| StaffResource | Full Filament resource |
-| StaffForm | Multi-step form |
-| StaffInfolist | Display cards |
-| StaffTable | Column configuration |
-| CredentialsRelationManager | Credential UI |
-| DepartmentsRelationManager | Department assignment UI |
-| SpecialtiesRelationManager | Specialties UI |
-| Events | StaffRegistered, StaffUpdated, etc. |
-
-### 9.2 What's Pending ⏳
-
-| Item | Priority | Notes |
-|------|----------|-------|
-| StaffAvailability model | LOW | Working hours tracking |
-| StaffSchedule model | LOW | Shift scheduling |
-| Document upload for credentials | MEDIUM | Spatie Media Library |
-| Role permissions matrix | MEDIUM | Per role permissions |
-| Credential expiry notifications | LOW | Event listener |
-| Tests | MEDIUM | Unit tests coverage |
-
-### 9.3 FHIR Integration ✅
-
-- [x] Practitioner resource mapping done
-- [x] PractitionerRole resource mapping done
+17 test files (`tests/Feature`: model, credential model, edge cases, ID card print, FHIR Practitioner/PractitionerRole API, staff API, credential API; `tests/Unit`: enums, models, services, FHIR transformers, relation-manager soft boundary). Run with `php artisan test --compact Modules/Staff/tests`.
