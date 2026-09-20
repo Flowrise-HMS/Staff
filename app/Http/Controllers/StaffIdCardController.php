@@ -5,6 +5,7 @@ namespace Modules\Staff\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
+use Modules\Core\Settings\FeatureSettings;
 use Modules\Staff\Models\Staff;
 
 class StaffIdCardController extends Controller
@@ -13,6 +14,7 @@ class StaffIdCardController extends Controller
     {
         Gate::authorize('view', $staff);
 
+        abort_unless(app(FeatureSettings::class)->staff_id_card_enabled, 404);
         abort_unless(request()->user()?->can('print_staff_id'), 403);
 
         $staff->loadMissing([

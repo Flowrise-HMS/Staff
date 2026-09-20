@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Context;
 use Modules\Core\Database\Factories\BranchFactory;
+use Modules\Core\Settings\FeatureSettings;
 use Modules\Core\Tests\Support\AssertsOfflinePrintHtml;
 use Modules\Staff\Models\Staff;
 use Spatie\Permission\Models\Permission;
@@ -64,5 +65,20 @@ class StaffIdCardPrintTest extends TestCase
         $response = $this->actingAs($user)->get(route('staff.id-card', $staff));
 
         $response->assertForbidden();
+    }
+
+    public function test_staff_id_card_returns_404_when_the_feature_is_disabled(): void
+    {
+        FeatureSettings::fake(['staff_id_card_enabled' => false]);
+        Permission::firstOrCreate(['name' => 'print_staff_id', 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => 'View Staff', 'guard_name' => 'web']);
+
+        $branch = BranchFactory::new()->create();
+        Context::add('current_branch_id', $branch->id);
+        $staff = Staff::factory()->create(['branch_id' => $branch->id]);
+        $user = User::factory()->create();
+        $user->givePermissionTo(['print_staff_id', 'View Staff']);
+
+        $this->actingAs($user)->get(route('staff.id-card', $staff))->assertNotFound();
     }
 }

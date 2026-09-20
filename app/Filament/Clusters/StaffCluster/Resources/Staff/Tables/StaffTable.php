@@ -22,6 +22,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Modules\Core\Enums\UserRole;
+use Modules\Core\Settings\FeatureSettings;
 use Modules\Core\Support\SuperAdmin;
 use Modules\Patient\Enums\Gender;
 use Modules\Staff\Classes\Services\StaffAccountService;
@@ -172,7 +173,8 @@ class StaffTable
                     ->icon('heroicon-o-identification')
                     ->url(fn ($record) => route('staff.id-card', $record))
                     ->openUrlInNewTab()
-                    ->visible(fn () => Auth::user()?->can('print_staff_id')),
+                    ->visible(fn () => app(FeatureSettings::class)->staff_id_card_enabled
+                        && Auth::user()?->can('print_staff_id')),
                 EditAction::make()
                     ->label('Edit'),
                 DeleteAction::make()

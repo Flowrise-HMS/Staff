@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Modules\Core\Settings\FeatureSettings;
 use Modules\Core\Support\SuperAdmin;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
 
@@ -28,7 +29,8 @@ class ViewStaff extends ViewRecord
                 ->icon(Heroicon::OutlinedIdentification)
                 ->url(fn () => route('staff.id-card', $this->getRecord()))
                 ->openUrlInNewTab()
-                ->visible(fn () => Auth::user()?->can('print_staff_id')),
+                ->visible(fn () => app(FeatureSettings::class)->staff_id_card_enabled
+                    && Auth::user()?->can('print_staff_id')),
             EditAction::make(),
             DeleteAction::make(),
         ];
