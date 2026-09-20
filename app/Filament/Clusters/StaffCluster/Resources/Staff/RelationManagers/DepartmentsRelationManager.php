@@ -20,6 +20,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Modules\Core\Models\Department;
 
 class DepartmentsRelationManager extends RelationManager
@@ -59,6 +60,7 @@ class DepartmentsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('department'))
             ->recordTitleAttribute('department.name')
             ->columns([
                 IconColumn::make('is_primary')
@@ -66,7 +68,7 @@ class DepartmentsRelationManager extends RelationManager
                     ->boolean()
                     ->trueIcon('heroicon-s-star')
                     ->trueColor('warning')
-                    ->falseIcon('heroicon-m-outline-star')
+                    ->falseIcon('heroicon-o-star')
                     ->falseColor('gray'),
 
                 TextColumn::make('department.name')

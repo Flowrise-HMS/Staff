@@ -84,7 +84,7 @@ class SpecialtiesRelationManager extends RelationManager
                     ->boolean()
                     ->trueIcon('heroicon-s-star')
                     ->trueColor('warning')
-                    ->falseIcon('heroicon-m-outline-star')
+                    ->falseIcon('heroicon-o-star')
                     ->falseColor('gray'),
 
                 TextColumn::make('specialty_name')

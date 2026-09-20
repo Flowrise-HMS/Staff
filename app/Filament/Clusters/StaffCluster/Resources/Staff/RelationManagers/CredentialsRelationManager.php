@@ -18,6 +18,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Modules\Staff\Enums\CredentialStatus;
 use Modules\Staff\Enums\CredentialType;
 use Nnjeim\World\Models\Country;
@@ -80,6 +81,7 @@ class CredentialsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('verifiedBy'))
             ->recordTitleAttribute('credential_number')
             ->columns([
                 TextColumn::make('credential_type')

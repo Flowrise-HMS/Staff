@@ -4,6 +4,7 @@ namespace Modules\Staff\Tests\Unit;
 
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Modules\Core\Models\Department;
+use Modules\Core\Settings\NumberingSettings;
 use Modules\Staff\Enums\CredentialType;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
@@ -36,6 +37,13 @@ class StaffModelTest extends TestCase
 
         $this->assertNotNull($staff->staff_number);
         $this->assertStringStartsWith('STF-', $staff->staff_number);
+    }
+
+    public function test_staff_number_uses_the_configured_prefix(): void
+    {
+        NumberingSettings::fake(['staff_prefix' => 'EMP']);
+
+        $this->assertStringStartsWith('EMP-', Staff::generateStaffNumber());
     }
 
     public function test_full_name_accessor(): void

@@ -90,7 +90,7 @@ class Staff extends BaseModel
 
     public static function generateStaffNumber(): string
     {
-        $prefix = 'STF';
+        $prefix = document_prefix('staff');
         $year = now()->format('Y');
         $sequence = static::whereYear('created_at', $year)->count() + 1;
 
