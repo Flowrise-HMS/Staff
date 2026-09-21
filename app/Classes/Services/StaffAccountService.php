@@ -5,6 +5,7 @@ namespace Modules\Staff\Classes\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Modules\Staff\Models\Staff;
 use Modules\Staff\Notifications\StaffCredentialsNotification;
 
@@ -53,9 +54,26 @@ class StaffAccountService
         return $user;
     }
 
+    /**
+     * Login handle derived from a person's names: lowercase ASCII, with spaces
+     * and punctuation collapsed to single dots ("Ama Serwaa" + "Osei-Bonsu"
+     * becomes "ama.serwaa.osei-bonsu"). Also the local part of generated emails.
+     */
+    public static function handleFor(?string $firstName, ?string $lastName): string
+    {
+        $handle = Str::of(Str::ascii(trim(($firstName ?? '').' '.($lastName ?? ''))))
+            ->lower()
+            ->replaceMatches('/[^a-z0-9-]+/', '.')
+            ->replaceMatches('/\.{2,}/', '.')
+            ->trim('.-')
+            ->toString();
+
+        return $handle !== '' ? $handle : 'user';
+    }
+
     public function generateEmail(Staff $staff): string
     {
-        $baseEmail = strtolower($staff->first_name.'.'.$staff->last_name);
+        $baseEmail = self::handleFor($staff->first_name, $staff->last_name);
         $email = $baseEmail.'@'.config('mail.domain', 'hospital.com');
 
         $counter = 1;
@@ -81,7 +99,7 @@ class StaffAccountService
 
     public function generateUsername(Staff $staff): string
     {
-        $baseUsername = strtolower($staff->first_name.'.'.$staff->last_name);
+        $baseUsername = self::handleFor($staff->first_name, $staff->last_name);
         $username = $baseUsername;
 
         $counter = 1;

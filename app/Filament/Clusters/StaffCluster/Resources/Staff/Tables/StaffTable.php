@@ -186,8 +186,10 @@ class StaffTable
                     ->visible(fn ($record) => ! $record->user_id)
                     ->schema([
                         TextInput::make('username')
-                            ->default(fn ($record) => strtolower($record->first_name.'.'.$record->last_name))
+                            ->default(fn ($record) => StaffAccountService::handleFor($record->first_name, $record->last_name))
                             ->required()
+                            ->regex('/^[a-z0-9._-]+$/')
+                            ->validationMessages(['regex' => __('Usernames may only contain lowercase letters, numbers, dots, dashes and underscores.')])
                             ->unique('users', 'username', ignoreRecord: false),
                         TextInput::make('email')
                             ->email()
@@ -240,6 +242,8 @@ class StaffTable
                         TextInput::make('username')
                             ->default(fn ($record) => $record?->user?->username ?? $record?->staff_number)
                             ->required()
+                            ->regex('/^[a-zA-Z0-9._-]+$/')
+                            ->validationMessages(['regex' => __('Usernames may only contain letters, numbers, dots, dashes and underscores.')])
                             ->unique('users', 'username', fn ($record) => $record?->user, ignoreRecord: false),
                         TextInput::make('email')
                             ->email()
