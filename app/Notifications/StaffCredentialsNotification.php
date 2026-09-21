@@ -6,12 +6,11 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Modules\Core\Notifications\Concerns\RespectsNotificationSettings;
-use Modules\Core\Support\AppSettings;
+use Modules\Core\Notifications\Concerns\ResolvesNotificationChannels;
 
 class StaffCredentialsNotification extends Notification implements ShouldQueue
 {
-    use Queueable, RespectsNotificationSettings;
+    use Queueable, ResolvesNotificationChannels;
 
     public function __construct(
         protected string $password
@@ -24,13 +23,7 @@ class StaffCredentialsNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        try {
-            $mailEnabled = app(AppSettings::class)->notifications()->staff_credentials_mail;
-        } catch (\Throwable) {
-            $mailEnabled = true;
-        }
-
-        return $this->applyNotificationSettings(['mail', 'database'], $mailEnabled, false);
+        return $this->settingsChannels($notifiable, 'staff_credentials_mail', wanted: ['mail', 'database']);
     }
 
     public function toMail(object $notifiable): MailMessage
