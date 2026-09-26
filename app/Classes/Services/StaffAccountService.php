@@ -30,7 +30,7 @@ class StaffAccountService
 
         $username = isset($data['username']) && ! empty($data['username']) ? $data['username'] : $this->generateUsername($staff);
         $email = isset($data['email']) && ! empty($data['email']) ? $data['email'] : $this->generateEmail($staff);
-        $password = $data['password'] ?? $this->generatePassword();
+        $password = filled($data['password'] ?? null) ? $data['password'] : $this->generatePassword();
 
         $user = User::create([
             'name' => $staff->full_name,
@@ -49,6 +49,60 @@ class StaffAccountService
 
         if ($data['send_credentials'] ?? false) {
             $this->sendCredentialsEmail($user, $password);
+        }
+
+        return $user;
+    }
+
+    /**
+     * Create, update or deactivate a staff member's login account from the
+     * StaffAccountFields state (login_access, username, email, roles, password,
+     * send_credentials). Turning access off deactivates the user; it is never
+     * deleted or unlinked, so the audit trail stays intact.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function syncAccount(Staff $staff, array $data): ?User
+    {
+        $user = $staff->user;
+
+        if (! ($data['login_access'] ?? false)) {
+            if ($user !== null && $user->is_active) {
+                $this->deactivateAccount($staff);
+            }
+
+            return $user?->refresh();
+        }
+
+        $roles = array_values(array_filter((array) ($data['roles'] ?? [])));
+
+        if ($user === null) {
+            $this->setRole($roles !== [] ? $roles : $this->defaultRole);
+
+            return $this->createUserAccount($staff, $data);
+        }
+
+        $user->fill(array_filter([
+            'name' => $staff->full_name,
+            'username' => $data['username'] ?? null,
+            'email' => $data['email'] ?? null,
+        ], fn (mixed $value): bool => filled($value)));
+        $user->is_active = true;
+
+        $newPassword = filled($data['password'] ?? null) ? (string) $data['password'] : null;
+
+        if ($newPassword !== null) {
+            $user->password = Hash::make($newPassword);
+        }
+
+        $user->save();
+
+        if ($roles !== []) {
+            $user->syncRoles($roles);
+        }
+
+        if ($newPassword !== null && ($data['send_credentials'] ?? false)) {
+            $this->sendCredentialsEmail($user, $newPassword);
         }
 
         return $user;

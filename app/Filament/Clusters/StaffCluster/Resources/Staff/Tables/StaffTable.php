@@ -4,6 +4,7 @@ namespace Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Tables;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -11,24 +12,23 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Modules\Core\Enums\UserRole;
 use Modules\Core\Settings\FeatureSettings;
 use Modules\Core\Support\SuperAdmin;
 use Modules\Patient\Enums\Gender;
-use Modules\Staff\Classes\Services\StaffAccountService;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
+use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Actions\StaffAccountActions;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
+use Modules\Staff\Http\Controllers\StaffIdCardsBulkController;
 use Ysfkaya\FilamentPhoneInput\Tables\PhoneColumn;
 
 class StaffTable
@@ -36,6 +36,8 @@ class StaffTable
     public static function configure(Table $table): Table
     {
         return $table
+            // Row actions (impersonate, account management) read each staff member's user and roles.
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('user.roles'))
             ->columns(static::columns())
             ->filters(static::filters())
             ->recordActions(static::actions())
@@ -179,164 +181,7 @@ class StaffTable
                     ->label('Edit'),
                 DeleteAction::make()
                     ->label('Delete'),
-                Action::make('createUserAccount')
-                    ->label('Create User Account')
-                    ->icon('heroicon-m-user-plus')
-                    ->color('success')
-                    ->visible(fn ($record) => ! $record->user_id)
-                    ->schema([
-                        TextInput::make('username')
-                            ->default(fn ($record) => StaffAccountService::handleFor($record->first_name, $record->last_name))
-                            ->required()
-                            ->regex('/^[a-z0-9._-]+$/')
-                            ->validationMessages(['regex' => __('Usernames may only contain lowercase letters, numbers, dots, dashes and underscores.')])
-                            ->unique('users', 'username', ignoreRecord: false),
-                        TextInput::make('email')
-                            ->email()
-                            ->label('Email Address')
-                            ->helperText('Leave empty to auto-generate based on name')
-                            ->default(fn ($record) => strtolower($record->first_name.'.'.$record->last_name).'@hospital.com')
-                            ->placeholder(fn ($record) => strtolower($record->first_name.'.'.$record->last_name).'@hospital.com'),
-
-                        Toggle::make('send_credentials')
-                            ->label('Send credentials via email')
-                            ->default(true),
-
-                        Select::make('roles')
-                            ->label('Role(s)')
-                            ->options(UserRole::class)
-                            ->multiple()
-                            ->searchable()
-                            ->preload()
-                            ->required(),
-                        TextInput::make('password')
-                            ->label('New Password')
-                            ->password()
-                            ->revealable()
-                            ->nullable()
-                            ->helperText('Leave empty to auto generate'),
-                    ])
-                    ->action(function ($record, array $data) {
-                        $service = app(StaffAccountService::class);
-                        if (! empty($data['roles'])) {
-                            $service->setRole($data['roles']);
-                        }
-                        $user = $service->createUserAccount($record, $data);
-
-                        if ($user) {
-
-                            Notification::make()
-                                ->title('User account created')
-                                ->body('Login credentials have been '.($data['send_credentials'] ? 'sent to '.$user->email : 'created'))
-                                ->success()
-                                ->send();
-                        }
-                    }),
-
-                Action::make('manageUserAccount')
-                    ->label('Manage Account')
-                    ->icon('heroicon-m-cog-6-tooth')
-                    ->color('warning')
-                    ->visible(fn ($record) => (bool) $record->user_id)
-                    ->schema([
-                        TextInput::make('username')
-                            ->default(fn ($record) => $record?->user?->username ?? $record?->staff_number)
-                            ->required()
-                            ->regex('/^[a-zA-Z0-9._-]+$/')
-                            ->validationMessages(['regex' => __('Usernames may only contain letters, numbers, dots, dashes and underscores.')])
-                            ->unique('users', 'username', fn ($record) => $record?->user, ignoreRecord: false),
-                        TextInput::make('email')
-                            ->email()
-                            ->label('Email Address')
-                            ->default(fn ($record) => $record?->user?->email ?? '')
-                            ->required()
-                            ->unique('users', 'email', fn ($record) => $record?->user, ignoreRecord: false),
-
-                        Select::make('roles')
-                            ->label('Role(s)')
-                            ->options(UserRole::class)
-                            ->multiple()
-                            ->searchable()
-                            ->preload()
-                            ->required()
-                            ->default(fn ($record) => $record->user?->roles?->pluck('name')->toArray() ?? []),
-
-                        TextInput::make('password')
-                            ->label('New Password')
-                            ->password()
-                            ->revealable()
-                            ->nullable()
-                            ->helperText('Leave empty to keep current password'),
-
-                        Toggle::make('is_active')
-                            ->label('Account Active')
-                            ->default(fn ($record) => $record->user?->is_active),
-                    ])
-                    ->action(function ($record, array $data) {
-                        $service = app(StaffAccountService::class);
-
-                        if ($record->user) {
-                            $user = $record->user;
-
-                            $user->update([
-                                'username' => $data['username'],
-                                'email' => $data['email'],
-                            ]);
-
-                            if (! empty($data['password'])) {
-                                $user->update(['password' => Hash::make($data['password'])]);
-                            }
-
-                            if (! empty($data['roles'])) {
-                                $user->syncRoles($data['roles']);
-                            }
-
-                            if (isset($data['is_active'])) {
-                                $data['is_active']
-                                    ? $service->activateAccount($record)
-                                    : $service->deactivateAccount($record);
-                            }
-                        }
-
-                        Notification::make()
-                            ->title('Account updated')
-                            ->success()
-                            ->send();
-                    }),
-
-                Action::make('resetPassword')
-                    ->label('Reset Password')
-                    ->icon('heroicon-m-key')
-                    ->color('warning')
-                    ->requiresConfirmation()
-                    ->visible(fn ($record) => (bool) $record->user_id)
-                    ->action(function ($record) {
-                        $service = app(StaffAccountService::class);
-                        $service->resetPassword($record);
-
-                        Notification::make()
-                            ->title('Password reset')
-                            ->body('New credentials sent to '.$record->user->email)
-                            ->success()
-                            ->send();
-                    }),
-
-                Action::make('resendCredentials')
-                    ->label('Resend Credentials')
-                    ->icon('heroicon-m-envelope')
-                    ->color('info')
-                    ->requiresConfirmation()
-                    ->visible(fn ($record) => (bool) $record->user_id)
-                    ->action(function ($record) {
-                        $service = app(StaffAccountService::class);
-                        $service->resendCredentials($record);
-
-                        Notification::make()
-                            ->title('Credentials resent')
-                            ->body('Login credentials sent to '.$record->user->email)
-                            ->success()
-                            ->send();
-                    }),
+                ...StaffAccountActions::all(),
 
                 Action::make('update_status')
                     ->label('Update Status')
@@ -368,6 +213,22 @@ class StaffTable
     public static function bulkActions(): array
     {
         return [
+            BulkAction::make('print_id_cards')
+                ->label(__('Print ID cards'))
+                ->icon('heroicon-o-identification')
+                ->color('gray')
+                ->visible(fn (): bool => app(FeatureSettings::class)->staff_id_card_enabled
+                    && (bool) Auth::user()?->can('print_staff_id'))
+                ->modalHeading(__('Print staff ID cards'))
+                ->modalContent(fn (Collection $records) => view('core::filament.bulk-print-link', [
+                    'count' => $records->count(),
+                    'max' => StaffIdCardsBulkController::MAX_CARDS,
+                    'url' => $records->count() <= StaffIdCardsBulkController::MAX_CARDS
+                        ? StaffIdCardsBulkController::urlFor($records->modelKeys())
+                        : null,
+                ]))
+                ->modalSubmitAction(false)
+                ->modalCancelActionLabel(__('Close')),
             BulkActionGroup::make([
                 DeleteBulkAction::make(),
             ]),

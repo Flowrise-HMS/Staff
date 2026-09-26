@@ -18,6 +18,7 @@ use Modules\Patient\Enums\Gender;
 use Modules\Patient\Enums\RelationshipType;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
+use Modules\Staff\Models\Staff;
 use Nnjeim\World\Models\Country;
 use Nnjeim\World\Models\State;
 use Ysfkaya\FilamentPhoneInput\Forms\PhoneInput;
@@ -43,6 +44,10 @@ class StaffForm
                         $contactInfo, $addressInfo,
                     ]),
                     Step::make($emergencyInfo->getHeading())->schema([$emergencyInfo]),
+                    Step::make(__('Login Access'))
+                        ->icon('heroicon-o-key')
+                        ->schema([StaffAccountFields::formSection()])
+                        ->visible(fn (?Staff $record): bool => StaffAccountFields::canManageAccounts($record)),
                 ])
                     ->columnSpanFull()
                     ->skippable(),

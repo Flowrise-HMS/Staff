@@ -3,6 +3,7 @@
 namespace Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Pages;
 
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
@@ -10,6 +11,7 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 use Modules\Core\Settings\FeatureSettings;
 use Modules\Core\Support\SuperAdmin;
+use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Actions\StaffAccountActions;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
 
 class ViewStaff extends ViewRecord
@@ -31,6 +33,17 @@ class ViewStaff extends ViewRecord
                 ->openUrlInNewTab()
                 ->visible(fn () => app(FeatureSettings::class)->staff_id_card_enabled
                     && Auth::user()?->can('print_staff_id')),
+            StaffAccountActions::impersonate(),
+            ActionGroup::make([
+                StaffAccountActions::createAccount(),
+                StaffAccountActions::manageAccount(),
+                StaffAccountActions::resetPassword(),
+                StaffAccountActions::resendCredentials(),
+            ])
+                ->label(__('Login account'))
+                ->icon('heroicon-m-key')
+                ->button()
+                ->color('gray'),
             EditAction::make(),
             DeleteAction::make(),
         ];
