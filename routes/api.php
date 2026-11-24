@@ -5,7 +5,7 @@ use Modules\Core\Services\ApiRouteRegistrar;
 use Modules\Staff\Http\Controllers\Api\StaffController;
 use Modules\Staff\Http\Controllers\Api\StaffCredentialController;
 
-ApiRouteRegistrar::register(routes: function () {
+ApiRouteRegistrar::register(scope: 'staff', routes: function (): void {
     Route::apiResource('staff', StaffController::class)->only(['index', 'show', 'store', 'update']);
 
     /*
