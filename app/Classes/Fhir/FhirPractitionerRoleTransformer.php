@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Core\Models\Department as DepartmentModel;
 use Modules\FHIR\Contracts\FhirWritableResourceContract;
+use Modules\Staff\Models\Staff;
 use Modules\Staff\Models\StaffDepartment;
 
 class FhirPractitionerRoleTransformer implements FhirWritableResourceContract
@@ -135,7 +136,7 @@ class FhirPractitionerRoleTransformer implements FhirWritableResourceContract
 
     public function findById(string $id): ?Model
     {
-        return StaffDepartment::query()->find($id);
+        return $this->query()->find($id);
     }
 
     /**
@@ -149,7 +150,8 @@ class FhirPractitionerRoleTransformer implements FhirWritableResourceContract
      */
     public function query(): Builder
     {
-        return StaffDepartment::query()->with([
+        // The pivot has no branch of its own; the staff member's branch scope is its isolation.
+        return StaffDepartment::query()->whereHas('staff')->with([
             'staff.branch.organization',
             'staff.specialties',
             'department.locations',
@@ -174,6 +176,8 @@ class FhirPractitionerRoleTransformer implements FhirWritableResourceContract
         $practitioner = $fhirResource['practitioner'] ?? [];
         if (empty($practitioner['reference'])) {
             $errors['practitioner'] = 'Practitioner reference is required.';
+        } elseif (! Staff::query()->whereKey($this->fromFhir($fhirResource)['staff_id'])->exists()) {
+            $errors['practitioner'] = 'Practitioner not found.';
         }
 
         /*
