@@ -27,6 +27,7 @@ use Modules\Patient\Enums\Gender;
 use Modules\Staff\Enums\EmploymentStatus;
 use Modules\Staff\Enums\StaffType;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Actions\StaffAccountActions;
+use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Actions\StaffWardActions;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
 use Modules\Staff\Http\Controllers\StaffIdCardsBulkController;
 use Ysfkaya\FilamentPhoneInput\Tables\PhoneColumn;
@@ -182,6 +183,7 @@ class StaffTable
                 DeleteAction::make()
                     ->label('Delete'),
                 ...StaffAccountActions::all(),
+                StaffWardActions::assignToWard(),
 
                 Action::make('update_status')
                     ->label('Update Status')

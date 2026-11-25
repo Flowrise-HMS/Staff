@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Gate;
 use Modules\Core\Enums\UserRole;
 use Modules\Core\Support\SuperAdmin;
 use Modules\Staff\Models\Staff;
+use Spatie\Permission\Models\Role;
 
 /**
  * Login-account fields for a staff member, shared by the staff create/edit form
@@ -167,7 +168,12 @@ class StaffAccountFields
      */
     public static function roleOptions(): array
     {
+        // Only offer roles that exist: a UserRole case without a seeded role
+        // (e.g. ward_incharge, which is granted by ward assignment) cannot be synced.
+        $existing = Role::query()->where('guard_name', 'web')->pluck('name')->all();
+
         return collect(UserRole::cases())
+            ->filter(fn (UserRole $role): bool => in_array($role->value, $existing, true))
             ->reject(fn (UserRole $role): bool => $role === UserRole::SUPER_ADMIN && ! SuperAdmin::check(Auth::user()))
             ->mapWithKeys(fn (UserRole $role): array => [$role->value => (string) $role->getLabel()])
             ->all();

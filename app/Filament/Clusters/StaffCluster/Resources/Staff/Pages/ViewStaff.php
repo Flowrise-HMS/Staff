@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Modules\Core\Settings\FeatureSettings;
 use Modules\Core\Support\SuperAdmin;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Actions\StaffAccountActions;
+use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\Actions\StaffWardActions;
 use Modules\Staff\Filament\Clusters\StaffCluster\Resources\Staff\StaffResource;
 
 class ViewStaff extends ViewRecord
@@ -34,6 +35,7 @@ class ViewStaff extends ViewRecord
                 ->visible(fn () => app(FeatureSettings::class)->staff_id_card_enabled
                     && Auth::user()?->can('print_staff_id')),
             StaffAccountActions::impersonate(),
+            StaffWardActions::assignToWard(),
             ActionGroup::make([
                 StaffAccountActions::createAccount(),
                 StaffAccountActions::manageAccount(),

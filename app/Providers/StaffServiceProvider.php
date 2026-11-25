@@ -4,12 +4,14 @@ namespace Modules\Staff\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
+use Modules\Core\Contracts\StaffDirectoryContract;
 use Modules\Core\Support\OptionalClass;
 use Modules\Staff\Classes\Services\StaffAccountService;
 use Modules\Staff\Classes\Services\StaffAssignmentService;
 use Modules\Staff\Classes\Services\StaffCredentialService;
 use Modules\Staff\Classes\Services\StaffSearchService;
 use Modules\Staff\Classes\Services\StaffService;
+use Modules\Staff\Classes\Support\StaffDirectory;
 use Modules\Staff\Models\Staff;
 use Modules\Staff\Policies\StaffPolicy;
 use Nwidart\Modules\Support\ModuleServiceProvider;
@@ -93,6 +95,8 @@ class StaffServiceProvider extends ModuleServiceProvider
 
     protected function registerServices(): void
     {
+        $this->app->bind(StaffDirectoryContract::class, StaffDirectory::class);
+
         $this->app->singleton(
             StaffService::class,
             fn () => new StaffService
