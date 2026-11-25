@@ -372,15 +372,23 @@ test('validateBusinessRules passes when the location resolves to one department'
     $department = Department::factory()->create();
     $department->locations()->attach($location->id, ['is_primary' => true]);
 
+    $staff = Staff::factory()->create(['branch_id' => $branch->id]);
+
     $resource = [
         'resourceType' => 'PractitionerRole',
-        'practitioner' => ['reference' => 'Practitioner/uuid'],
+        'practitioner' => ['reference' => "Practitioner/{$staff->id}"],
         'location' => [['reference' => "Location/{$location->id}"]],
     ];
 
     $errors = $transformer->validateBusinessRules($resource);
 
     expect($errors)->toBeEmpty();
+});
+
+test('validateBusinessRules refuses a practitioner that does not exist', function () use ($transformer) {
+    $errors = $transformer->validateBusinessRules(['resourceType' => 'PractitionerRole', 'practitioner' => ['reference' => 'Practitioner/uuid']]);
+
+    expect($errors)->toHaveKey('practitioner', 'Practitioner not found.');
 });
 
 test('validateBusinessRules fails without practitioner reference', function () use ($transformer) {
